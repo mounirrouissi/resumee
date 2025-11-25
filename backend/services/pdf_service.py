@@ -231,14 +231,25 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 def generate_improved_pdf(text: str, output_path: str, template_id: str = "professional"):
     """
     Generate ATS-optimized PDF resume following professional standards.
-    Uses simple, clean formatting that works with all ATS systems.
+    Uses formatting markers if present, otherwise falls back to simple parsing.
     """
     try:
         from backend.services.templates import get_template
+        from backend.services.pdf_formatter import generate_pdf_from_formatted_text, PDFFormatter
         
         logger.info(f"Generating PDF with template '{template_id}' at: {output_path}")
         template = get_template(template_id)
         template_styles = template.get_styles()
+        
+        # Check if text has formatting markers
+        formatter = PDFFormatter(template_styles)
+        if formatter.has_formatting_markers(text):
+            logger.info("✓ Using advanced PDF formatter with markers")
+            generate_pdf_from_formatted_text(text, output_path, template_styles)
+            return
+        
+        # Fall back to simple rendering if no markers
+        logger.info("⚠️ No formatting markers - using simple text parsing")
         doc = SimpleDocTemplate(
             output_path,
             pagesize=letter,
