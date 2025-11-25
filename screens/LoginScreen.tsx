@@ -16,6 +16,13 @@ export default function LoginScreen() {
   const { signInWithGoogle, continueAsGuest } = useUser();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Check if Google OAuth is configured
+  const hasGoogleConfig = !!(
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+    process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
+    process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
+  );
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
@@ -56,8 +63,15 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!hasGoogleConfig) {
+      console.warn("Google OAuth is not configured. Continuing as guest instead.");
+      handleGuestContinue();
+      return;
+    }
+    
     if (!request) {
-      console.error("Google OAuth is not configured. Please set up Google client IDs.");
+      console.error("Google OAuth request failed. Please check configuration.");
+      handleGuestContinue();
       return;
     }
     
@@ -66,6 +80,8 @@ export default function LoginScreen() {
       await promptAsync();
     } catch (error) {
       console.error("Google sign-in error:", error);
+      // Fall back to guest mode on error
+      handleGuestContinue();
     } finally {
       setIsLoading(false);
     }
@@ -91,43 +107,49 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.buttonsContainer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.googleButton,
-              { 
-                backgroundColor: theme.backgroundSecondary,
-                borderColor: theme.border,
-                opacity: pressed ? 0.7 : 1 
-              },
-            ]}
-            onPress={handleGoogleSignIn}
-            disabled={!request || isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color={theme.primary} />
-            ) : (
-              <>
-                <Image
-                  source={require("@/assets/images/google-icon.png")}
-                  style={styles.googleIcon}
-                />
-                <ThemedText style={[Typography.body, styles.buttonText]}>
-                  Continue with Google
-                </ThemedText>
-              </>
-            )}
-          </Pressable>
+          {hasGoogleConfig && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.googleButton,
+                { 
+                  backgroundColor: theme.backgroundSecondary,
+                  borderColor: theme.border,
+                  opacity: pressed ? 0.7 : 1 
+                },
+              ]}
+              onPress={handleGoogleSignIn}
+              disabled={!request || isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color={theme.primary} />
+              ) : (
+                <>
+                  <Image
+                    source={require("@/assets/images/google-icon.png")}
+                    style={styles.googleIcon}
+                  />
+                  <ThemedText style={[Typography.body, styles.buttonText]}>
+                    Continue with Google
+                  </ThemedText>
+                </>
+              )}
+            </Pressable>
+          )}
 
           <Pressable
             style={({ pressed }) => [
-              styles.guestButton,
+              hasGoogleConfig ? styles.guestButton : styles.primaryButton,
+              hasGoogleConfig ? {} : { backgroundColor: theme.primary },
               { opacity: pressed ? 0.7 : 1 },
             ]}
             onPress={handleGuestContinue}
             disabled={isLoading}
           >
-            <ThemedText style={[Typography.caption, { color: theme.textSecondary }]}>
-              Continue as guest
+            <ThemedText style={[
+              hasGoogleConfig ? Typography.caption : Typography.body,
+              hasGoogleConfig ? { color: theme.textSecondary } : { color: theme.buttonText, fontWeight: '600' }
+            ]}>
+              {hasGoogleConfig ? 'Continue as guest' : 'Get Started'}
             </ThemedText>
           </Pressable>
         </View>
@@ -194,6 +216,13 @@ const styles = StyleSheet.create({
   guestButton: {
     alignItems: "center",
     paddingVertical: Spacing.md,
+  },
+  primaryButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    height: 56,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xl,
   },
   footer: {
     paddingHorizontal: Spacing.xl,

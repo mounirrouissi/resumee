@@ -16,15 +16,16 @@ An AI-powered mobile and web application that analyzes and improves resumes/CVs 
 - **AI**: Google Generative AI API (Gemini)
 
 ## Recent Changes (Nov 25, 2025)
-1. Added Google authentication with OAuth integration
-2. Implemented "Continue as guest" functionality
-3. Updated UserContext to manage authentication state (Google vs guest)
-4. Created LoginScreen with Google sign-in button and guest option
-5. Updated ProfileScreen to show different UI for authenticated vs guest users
+1. Added Google auth
+2. entication with OAuth integration
+3. Implemented "Continue as guest" functionality
+4. Updated UserContext to manage authentication state (Google vs guest)
+5. Created LoginScreen with Google sign-in button and guest option
+6. Updated ProfileScreen to show different UI for authenticated vs guest users
    - Google users see their name, email, and profile picture
    - Guest users can edit their display name
    - All users can sign out to return to login screen
-6. Installed OAuth dependencies (expo-auth-session, expo-web-browser)
+7. Installed OAuth dependencies (expo-auth-session, expo-web-browser)
 
 ## Previous Changes (Nov 24, 2025)
 1. Updated PDF text extraction to use PaddleOCR instead of PyPDF2 for better accuracy
