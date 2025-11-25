@@ -1,0 +1,123 @@
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+import os
+import tempfile
+from datetime import datetime
+import uuid
+import logging
+from typing import Optional
+
+from backend.services.pdf_service import extract_text_from_pdf, generate_improved_pdf
+from backend.services.ai_service import improve_resume_text
+from backend.services.templates import list_templates, get_template
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Resume Improver API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+UPLOAD_DIR = "backend/uploads"
+OUTPUT_DIR = "backend/outputs"
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+@app.get("/")
+async def root():
+    logger.info("Root endpoint called")
+    return {"message": "Resume Improver API", "status": "running"}
+
+@app.get("/api/templates")
+async def get_templates():
+    """Get list of available CV templates."""
+    logger.info("Templates endpoint called")
+    return {"templates": list_templates()}
+
+@app.post("/api/upload-resume")
+async def upload_resume(
+    file: UploadFile = File(...),
+    template_id: str = Form(default="professional")
+):
+    logger.info(f"Upload resume request received. Filename: {file.filename}, Template: {template_id}")
+    
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        logger.warning(f"Invalid file format: {file.filename}")
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    file_id = str(uuid.uuid4())
+    timestamp = datetime.now().isoformat()
+    
+    original_path = os.path.join(UPLOAD_DIR, f"{file_id}_original.pdf")
+    logger.info(f"Processing file {file_id}. Saving to {original_path}")
+    
+    try:
+        contents = await file.read()
+        with open(original_path, "wb") as f:
+            f.write(contents)
+        logger.info(f"File saved successfully. Size: {len(contents)} bytes")
+        
+        logger.info("Starting text extraction...")
+        original_text = extract_text_from_pdf(original_path)
+        logger.info(f"Text extraction complete. Length: {len(original_text)} chars")
+        
+        if not original_text.strip():
+            logger.error("Extracted text is empty")
+            raise HTTPException(status_code=400, detail="Could not extract text from PDF")
+        
+        logger.info("Sending text to AI service for improvement...")
+        improved_text = await improve_resume_text(original_text, file_id, template_id)
+        logger.info(f"AI improvement complete. Length: {len(improved_text)} chars")
+        
+        improved_path = os.path.join(OUTPUT_DIR, f"{file_id}_improved.pdf")
+        logger.info(f"Generating improved PDF at {improved_path}")
+        generate_improved_pdf(improved_text, improved_path, template_id)
+        logger.info("Improved PDF generated successfully")
+        
+        return {
+            "id": file_id,
+            "original_filename": file.filename,
+            "timestamp": timestamp,
+            "original_text": original_text,
+            "improved_text": improved_text,
+            "download_url": f"/api/download/{file_id}"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error processing resume: {str(e)}", exc_info=True)
+        if os.path.exists(original_path):
+            os.remove(original_path)
+        raise HTTPException(status_code=500, detail=f"Error processing resume: {str(e)}")
+
+@app.get("/api/download/{file_id}")
+async def download_resume(file_id: str):
+    logger.info(f"Download request for file_id: {file_id}")
+    file_path = os.path.join(OUTPUT_DIR, f"{file_id}_improved.pdf")
+    
+    if not os.path.exists(file_path):
+        logger.warning(f"File not found: {file_path}")
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    logger.info(f"Serving file: {file_path}")
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename=f"improved_resume_{file_id}.pdf"
+    )
+
+@app.get("/health")
+async def health_check():
+    logger.info("Health check called")
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}

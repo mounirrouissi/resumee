@@ -1,0 +1,98 @@
+entrypoint = "README.md"
+modules = ["nodejs-20", "python-3.11", "web", "bash"]
+
+[nix]
+channel = "stable-25_05"
+packages = ["freetype", "glibcLocales", "lcms2", "libGL", "libGLU", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "poppler_utils", "tcl", "tk", "zlib"]
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 8082
+externalPort = 3000
+
+[[ports]]
+localPort = 41895
+externalPort = 3002
+
+[[ports]]
+localPort = 42497
+externalPort = 3001
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "EAS Init"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx eas init"
+
+[[workflows.workflow]]
+name = "EAS Update"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx eas update --auto"
+
+[[workflows.workflow]]
+name = "EAS Publish Preview iOS"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx eas build --platform ios --profile preview"
+
+[[workflows.workflow]]
+name = "EAS Publish Preview Android"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx eas build --platform android --profile preview"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash start_app.sh"
+waitForPort = 8000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[agent]
+stack = "EXPO"
+expertMode = true
+
+[deployment]
+deploymentTarget = "static"
+publicDir = "static-build"
+build = ["node", "scripts/build.js"]
+
+# Expo manifest headers
+[[deployment.responseHeaders]]
+path = "/*"
+name = "expo-protocol-version"
+value = "1"
+
+[[deployment.responseHeaders]]
+path = "/*"
+name = "expo-sfv-version"
+value = "0"

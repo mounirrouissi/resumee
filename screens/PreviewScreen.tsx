@@ -1,0 +1,238 @@
+import React, { useState } from "react";
+import { View, StyleSheet, Pressable, Alert, Share, Platform } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
+import { ScreenScrollView } from "@/components/ScreenScrollView";
+import { ThemedText } from "@/components/ThemedText";
+import { Card } from "@/components/Card";
+import { useTheme } from "@/hooks/useTheme";
+import { Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { useResumes } from "@/contexts/ResumeContext";
+import { resumeApi } from "@/services/resumeApi";
+import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+type PreviewRouteProp = RouteProp<HomeStackParamList, "Preview">;
+type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Preview">;
+
+export default function PreviewScreen() {
+  const { theme } = useTheme();
+  const route = useRoute<PreviewRouteProp>();
+  const navigation = useNavigation<NavigationProp>();
+  const { getResumeById } = useResumes();
+  const insets = useSafeAreaInsets();
+  const [showComparison, setShowComparison] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const resume = getResumeById(route.params.resumeId);
+
+  if (!resume) {
+    return (
+      <ScreenScrollView>
+        <View style={styles.container}>
+          <ThemedText>Resume not found</ThemedText>
+        </View>
+      </ScreenScrollView>
+    );
+  }
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true);
+      const downloadUrl = resumeApi.getDownloadUrl(resume.id);
+
+      if (Platform.OS === 'web') {
+        window.open(downloadUrl, '_blank');
+        return;
+      }
+
+      const fileUri = FileSystem.documentDirectory + `improved_resume_${resume.id}.pdf`;
+
+      const downloadResumable = FileSystem.createDownloadResumable(
+        downloadUrl,
+        fileUri,
+        {},
+        (downloadProgress) => {
+          const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+          console.log(`Download progress: ${progress * 100}%`);
+        }
+      );
+
+      const result = await downloadResumable.downloadAsync();
+
+      if (!result || result.status !== 200) {
+        throw new Error('Download failed');
+      }
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(result.uri, {
+          mimeType: 'application/pdf',
+          UTI: 'com.adobe.pdf'
+        });
+      } else {
+        Alert.alert('Success', 'PDF saved to documents directory');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to download PDF');
+      console.error(error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: resume.improvedText,
+        title: "My Improved Resume",
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to share resume");
+    }
+  };
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable onPress={handleShare} style={styles.headerButton}>
+          <Feather name="share-2" size={24} color={theme.primary} />
+        </Pressable>
+      ),
+    });
+  }, [navigation, theme, handleShare]);
+
+  return (
+    <>
+      <ScreenScrollView>
+        <View style={styles.container}>
+          <View style={styles.toggleContainer}>
+            <Pressable
+              style={[
+                styles.toggleButton,
+                !showComparison && { backgroundColor: theme.primary },
+              ]}
+              onPress={() => setShowComparison(false)}
+            >
+              <ThemedText
+                style={[
+                  Typography.bodySmall,
+                  { color: !showComparison ? theme.buttonText : theme.textSecondary },
+                ]}
+              >
+                Improved
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.toggleButton,
+                showComparison && { backgroundColor: theme.primary },
+              ]}
+              onPress={() => setShowComparison(true)}
+            >
+              <ThemedText
+                style={[
+                  Typography.bodySmall,
+                  { color: showComparison ? theme.buttonText : theme.textSecondary },
+                ]}
+              >
+                Comparison
+              </ThemedText>
+            </Pressable>
+          </View>
+
+          {showComparison ? (
+            <>
+              <Card style={styles.contentCard}>
+                <ThemedText style={[Typography.h2, styles.cardTitle]}>Original</ThemedText>
+                <ThemedText style={[Typography.bodySmall, styles.resumeText]}>
+                  {resume.originalText}
+                </ThemedText>
+              </Card>
+              <Card style={styles.contentCard}>
+                <ThemedText style={[Typography.h2, styles.cardTitle]}>Improved</ThemedText>
+                <ThemedText style={[Typography.bodySmall, styles.resumeText]}>
+                  {resume.improvedText}
+                </ThemedText>
+              </Card>
+            </>
+          ) : (
+            <Card style={styles.contentCard}>
+              <ThemedText style={[Typography.bodySmall, styles.resumeText]}>
+                {resume.improvedText}
+              </ThemedText>
+            </Card>
+          )}
+
+          <View style={{ height: 80 }} />
+        </View>
+      </ScreenScrollView>
+
+      <View
+        style={[
+          styles.downloadButtonContainer,
+          { bottom: insets.bottom + Spacing.xl },
+        ]}
+      >
+        <Pressable
+          style={[styles.downloadButton, { backgroundColor: theme.primary }]}
+          onPress={handleDownload}
+        >
+          <Feather name="download" size={20} color={theme.buttonText} />
+          <ThemedText style={[Typography.button, { color: theme.buttonText, marginLeft: Spacing.sm }]}>
+            Download PDF
+          </ThemedText>
+        </Pressable>
+      </View>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: Spacing.lg,
+  },
+  headerButton: {
+    padding: Spacing.sm,
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    overflow: "hidden",
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contentCard: {
+    marginBottom: Spacing.lg,
+  },
+  cardTitle: {
+    marginBottom: Spacing.md,
+  },
+  resumeText: {
+    lineHeight: 20,
+  },
+  downloadButtonContainer: {
+    position: "absolute",
+    left: Spacing.lg,
+    right: Spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 4,
+  },
+  downloadButton: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
