@@ -13,7 +13,16 @@ import { useUser } from "@/contexts/UserContext";
 export default function ProfileScreen() {
   const { theme, isDark } = useTheme();
   const colorScheme = useColorScheme();
-  const { displayName, setDisplayName, avatarUri, setAvatarUri } = useUser();
+  const { 
+    isAuthenticated, 
+    userType, 
+    userProfile, 
+    displayName, 
+    setDisplayName, 
+    avatarUri, 
+    setAvatarUri,
+    signOut 
+  } = useUser();
   const [localName, setLocalName] = useState(displayName);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
@@ -28,12 +37,19 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSignOut = () => {
+    signOut();
+  };
+
   return (
     <ScreenScrollView>
       <View style={styles.container}>
         <Card style={styles.avatarCard}>
           <View style={styles.avatarSection}>
-            <Pressable onPress={handleSelectAvatar} style={styles.avatarContainer}>
+            <Pressable 
+              onPress={userType === "guest" ? handleSelectAvatar : undefined} 
+              style={styles.avatarContainer}
+            >
               {avatarUri ? (
                 <Image source={{ uri: avatarUri }} style={styles.avatar} />
               ) : (
@@ -43,35 +59,60 @@ export default function ProfileScreen() {
                   <Feather name="user" size={40} color={theme.textSecondary} />
                 </View>
               )}
-              <View style={[styles.editBadge, { backgroundColor: theme.primary }]}>
-                <Feather name="edit-2" size={14} color={theme.buttonText} />
-              </View>
+              {userType === "guest" && (
+                <View style={[styles.editBadge, { backgroundColor: theme.primary }]}>
+                  <Feather name="edit-2" size={14} color={theme.buttonText} />
+                </View>
+              )}
             </Pressable>
+            {userType === "google" && userProfile && (
+              <View style={styles.userInfo}>
+                <ThemedText style={[Typography.h3, styles.userName]}>
+                  {userProfile.name}
+                </ThemedText>
+                <ThemedText style={[Typography.body, { color: theme.textSecondary }]}>
+                  {userProfile.email}
+                </ThemedText>
+              </View>
+            )}
           </View>
         </Card>
 
-        <Card style={styles.fieldCard}>
-          <ThemedText style={[Typography.bodySmall, styles.fieldLabel, { color: theme.textSecondary }]}>
-            Display Name
-          </ThemedText>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.backgroundSecondary,
-                color: theme.text,
-                borderColor: theme.border,
-              },
-            ]}
-            value={localName}
-            onChangeText={setLocalName}
-            onBlur={handleNameBlur}
-            placeholder="Enter your name"
-            placeholderTextColor={theme.textSecondary}
-            autoCapitalize="words"
-            returnKeyType="done"
-          />
-        </Card>
+        {userType === "guest" && (
+          <Card style={[styles.infoCard, { backgroundColor: theme.primaryLight }]}>
+            <View style={styles.infoRow}>
+              <Feather name="info" size={20} color={theme.primary} />
+              <ThemedText style={[Typography.body, styles.infoText, { color: theme.primary }]}>
+                You're using the app as a guest. Sign in with Google to save your progress across devices.
+              </ThemedText>
+            </View>
+          </Card>
+        )}
+
+        {userType === "guest" && (
+          <Card style={styles.fieldCard}>
+            <ThemedText style={[Typography.bodySmall, styles.fieldLabel, { color: theme.textSecondary }]}>
+              Display Name
+            </ThemedText>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.backgroundSecondary,
+                  color: theme.text,
+                  borderColor: theme.border,
+                },
+              ]}
+              value={localName}
+              onChangeText={setLocalName}
+              onBlur={handleNameBlur}
+              placeholder="Enter your name"
+              placeholderTextColor={theme.textSecondary}
+              autoCapitalize="words"
+              returnKeyType="done"
+            />
+          </Card>
+        )}
 
         <View style={styles.sectionHeader}>
           <ThemedText style={Typography.h2}>Preferences</ThemedText>
@@ -140,6 +181,28 @@ export default function ProfileScreen() {
             </View>
           </Pressable>
         </Card>
+
+        {isAuthenticated && (
+          <>
+            <View style={styles.sectionHeader}>
+              <ThemedText style={Typography.h2}>Account</ThemedText>
+            </View>
+
+            <Card style={styles.linkCard}>
+              <Pressable 
+                style={styles.linkRow}
+                onPress={handleSignOut}
+              >
+                <View style={styles.signOutRow}>
+                  <Feather name="log-out" size={20} color={theme.error || theme.primary} />
+                  <ThemedText style={[Typography.body, { color: theme.error || theme.primary }]}>
+                    Sign Out
+                  </ThemedText>
+                </View>
+              </Pressable>
+            </Card>
+          </>
+        )}
       </View>
     </ScreenScrollView>
   );
@@ -182,6 +245,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  userInfo: {
+    marginTop: Spacing.lg,
+    alignItems: "center",
+  },
+  userName: {
+    marginBottom: Spacing.xs,
+  },
+  infoCard: {
+    marginBottom: Spacing.lg,
+  },
+  infoRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    alignItems: "flex-start",
+  },
+  infoText: {
+    flex: 1,
+    fontWeight: "500",
+  },
   fieldCard: {
     marginBottom: Spacing.lg,
   },
@@ -222,5 +304,10 @@ const styles = StyleSheet.create({
   linkRight: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  signOutRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
   },
 });
