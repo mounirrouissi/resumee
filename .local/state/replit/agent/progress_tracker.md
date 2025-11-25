@@ -3,5 +3,7 @@
 [x] 3. Fix backend startup issues (install PaddlePaddle)
 [x] 4. Restart workflow - backend running on port 8000
 [x] 5. Create project documentation (replit.md)
-[ ] 6. User provides Gemini API key
-[ ] 7. Push to GitHub (user action)
+[x] 6. Install uvicorn for backend server
+[x] 7. Verify backend is running successfully
+[ ] 8. User provides Gemini API key
+[ ] 9. Push to GitHub (user action)
