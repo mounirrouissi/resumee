@@ -34,8 +34,27 @@ An AI-powered mobile and web application that analyzes and improves resumes/CVs 
 5. Set up environment for Replit deployment
 
 ## Environment Variables
+
+### AI Configuration
 - `GEMINI_API_KEY`: Google Gemini API key (required for AI features)
 - `LLM_MODEL`: Set to `gemini-1.5-flash` by default
+
+### Stripe Payment Configuration (Optional)
+To enable credit-based document generation with Stripe:
+
+1. Sign up at [Stripe](https://stripe.com) and get your API keys
+2. Add these environment variables:
+   - `STRIPE_SECRET_KEY`: Your Stripe secret key (starts with `sk_test_` for test mode)
+   - `STRIPE_WEBHOOK_SECRET`: Webhook signing secret from Stripe Dashboard
+   - `BASE_URL`: Your app's public URL (e.g., `https://your-app.replit.dev`)
+
+**Payment Features:**
+- Users get 1 free credit on first upload
+- Credit packs: 1 credit ($1.99), 5 credits ($7.99), 12 credits ($15.99)
+- Watermarked previews available without credits
+- Secure payment processing via Stripe Checkout
+
+**Testing:** Run `bash backend/tests/test_payments.sh` to test the payment flow
 
 ### Google OAuth Configuration (Optional)
 To enable Google sign-in on the app, you need to set up OAuth credentials:

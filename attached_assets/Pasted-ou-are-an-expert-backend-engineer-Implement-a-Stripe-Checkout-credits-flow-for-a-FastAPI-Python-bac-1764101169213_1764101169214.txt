@@ -1,0 +1,79 @@
+ou are an expert backend engineer. Implement a Stripe Checkout credits flow for a FastAPI Python backend that already handles OCR and CV generation. Produce only code files and no extra explanation. The deliverable must be ready-to-run and include unit-testable handlers and curl examples. Follow the exact requirements below:
+
+Environment & libs
+
+Python 3.11+.
+
+Use fastapi, uvicorn, python-dotenv, stripe, python-multipart, python-docx, pydantic.
+
+Use SQLite via sqlite3 (no external DB) for the MVP.
+
+Expect these env vars: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, BASE_URL (public server URL).
+
+Files to produce (exact filenames)
+
+backend/payments_server.py — a complete FastAPI app implementing the new payment/credit flow; it will be import-safe and runnable via uvicorn payments_server:app --reload.
+
+backend/db.py — tiny module that initializes SQLite DB with a sessions table: columns session_id TEXT PRIMARY KEY, improved_text TEXT, credits INTEGER, created_at TIMESTAMP.
+
+backend/stripe_utils.py — helper wrappers to create a Stripe Checkout session and verify webhook signatures.
+
+backend/tests/test_payments.sh — a shell script with curl examples to:
+
+create a sample session (simulate /upload by inserting a session_id with 1 free credit),
+
+call /create-checkout and print checkout URL,
+
+simulate webhook delivery (checkout.session.completed) using Stripe CLI style (note: instruct user to replace webhook secret).
+
+.env.example — example env file.
+
+Behavioral requirements
+
+POST /create-checkout accepts JSON { "session_id": "<id>", "pack": "5" } where pack is number of credits to buy (1,5,12). Return { "checkout_url": "..." }.
+
+The Checkout session must include metadata: app_session_id and credits (int).
+
+POST /webhook must verify Stripe signature header Stripe-Signature, parse the event, and if type == "checkout.session.completed", get metadata and atomically add credits to the sessions table row with session_id = metadata["app_session_id"]. If row not found, create it with credits from metadata.
+
+POST /generate must accept form session_id and filename and:
+
+if credits > 0: decrement credits (transactionally), generate .docx from improved_text field and return file using FileResponse.
+
+if credits == 0: return HTTP 402 with JSON { "error":"no_credits", "checkout_url": "<create-checkout url for this session>" }.
+
+All DB writes must be committed immediately; handle concurrent calls safely (use BEGIN IMMEDIATE or transaction).
+
+Implement a simple watermarking fallback: if no credits, generate a .docx where every paragraph has a trailing watermark line: -- WATERMARKED SAMPLE — PURCHASE TO DOWNLOAD ORIGINAL --.
+
+Provide clear error codes and HTTP status codes.
+
+Testing & examples
+
+Include backend/tests/test_payments.sh with steps and example curl commands to:
+
+Create a session in DB (simulate upload).
+
+Call /create-checkout and show returned URL.
+
+(Optional) Show how to simulate a webhook event (explain stripe CLI command to send an event).
+
+Call /generate to attempt download when credits == 0 (expect 402).
+
+Add inline comments in code showing where to plug existing OCR/generation logic (do not modify OCR logic).
+
+Quality constraints
+
+Validate inputs: session_id must be UUID-like; pack must be allowed values. Return 400 for invalid input.
+
+Use typed Pydantic request models and clear docstrings.
+
+Use logging for webhook events and errors.
+
+Return JSON responses with helpful keys (error, message, checkout_url, session_id, credits).
+
+Output format
+
+Return a single code block for each file requested. Do not include other commentary or extra files. Make sure files are ready to run and the test shell script contains placeholder variables to fill (like STRIPE_WEBHOOK_SECRET) with instructions in comments.
+
+Now implement these files.
