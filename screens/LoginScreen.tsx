@@ -56,6 +56,11 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!request) {
+      console.error("Google OAuth is not configured. Please set up Google client IDs.");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       await promptAsync();
@@ -71,7 +76,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
           <View style={[styles.iconCircle, { backgroundColor: theme.primary }]}>
@@ -90,7 +95,7 @@ export default function LoginScreen() {
             style={({ pressed }) => [
               styles.googleButton,
               { 
-                backgroundColor: theme.card,
+                backgroundColor: theme.backgroundSecondary,
                 borderColor: theme.border,
                 opacity: pressed ? 0.7 : 1 
               },
@@ -148,7 +153,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: Spacing.xxl * 2,
+    marginBottom: Spacing.xl * 3,
   },
   iconCircle: {
     width: 100,

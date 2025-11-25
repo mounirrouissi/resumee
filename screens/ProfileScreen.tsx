@@ -67,7 +67,7 @@ export default function ProfileScreen() {
             </Pressable>
             {userType === "google" && userProfile && (
               <View style={styles.userInfo}>
-                <ThemedText style={[Typography.h3, styles.userName]}>
+                <ThemedText style={[Typography.h2, styles.userName]}>
                   {userProfile.name}
                 </ThemedText>
                 <ThemedText style={[Typography.body, { color: theme.textSecondary }]}>
