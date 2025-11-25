@@ -111,12 +111,15 @@ async def improve_resume_text(original_text: str, file_id: str = None, template_
             return improved
         
         logger.info("Initializing Gemini model...")
-        # Use Gemini model
+        # Use Gemini model - gemini-2.5-flash is the stable fast model
+        model_name = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+        logger.info(f"Using model: {model_name}")
+        
         model = genai.GenerativeModel(
-            model_name=os.getenv("LLM_MODEL", "gemini-1.5-flash"),
+            model_name=model_name,
             generation_config={
                 "temperature": 0.7,
-                "max_output_tokens": 4000,
+                "max_output_tokens": 8000,
             }
         )
         
