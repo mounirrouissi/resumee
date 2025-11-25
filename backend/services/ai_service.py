@@ -100,14 +100,23 @@ WHAT TO AVOID:
 Return ONLY the improved resume text following the EXACT structure above with section dividers."""
 
 async def improve_resume_text(original_text: str, file_id: str = None, template_id: str = "professional") -> str:
+    logger.info("=" * 80)
+    logger.info("STARTING RESUME IMPROVEMENT PROCESS")
+    logger.info("=" * 80)
+    logger.info(f"File ID: {file_id}")
+    logger.info(f"Template ID: {template_id}")
+    logger.info(f"Original text length: {len(original_text)} characters")
+    logger.info(f"Original text preview (first 200 chars): {original_text[:200]}")
+    
     try:
         api_key = os.getenv("GEMINI_API_KEY", "")
         
         if not api_key:
-            logger.warning("No Gemini API key found, using simulation")
+            logger.warning("⚠️ No Gemini API key found, using simulation mode")
             improved = simulate_improvement(original_text)
+            logger.info(f"Simulation result length: {len(improved)} characters")
             if file_id:
-                save_improvement_analysis(original_text, improved, "Simulation mode", file_id)
+                save_improvement_analysis(original_text, improved, "Simulation mode - No API key", file_id)
             return improved
         
         logger.info("Initializing Gemini model...")
@@ -137,36 +146,81 @@ Original Resume:
 
 Provide ONLY a bullet-point list of specific improvements."""
 
-        logger.info("Generating improvement analysis...")
-        analysis_response = model.generate_content(analysis_prompt)
-        improvement_suggestions = analysis_response.text if analysis_response else "No suggestions generated"
-        logger.info("Improvement analysis complete")
+        logger.info("📊 Step 1: Generating improvement analysis...")
+        try:
+            analysis_response = model.generate_content(analysis_prompt)
+            improvement_suggestions = analysis_response.text if analysis_response else "No suggestions generated"
+            logger.info(f"✓ Analysis complete. Suggestions length: {len(improvement_suggestions)} characters")
+            logger.info(f"Suggestions preview: {improvement_suggestions[:200]}")
+        except Exception as analysis_error:
+            logger.error(f"✗ Analysis failed: {str(analysis_error)}")
+            improvement_suggestions = f"Analysis failed: {str(analysis_error)}"
         
         # Get template-specific system prompt
+        logger.info(f"📝 Step 2: Loading template '{template_id}'...")
         template = get_template(template_id)
         template_prompt = template.get_system_prompt()
+        logger.info(f"✓ Template loaded. Prompt length: {len(template_prompt)} characters")
         
         # Then, get the improved resume
         prompt = f"{template_prompt}\n\nImprove this resume:\n\n{original_text}"
-        logger.info(f"Sending request to Gemini with template '{template_id}'. Prompt length: {len(prompt)}")
+        logger.info(f"🚀 Step 3: Sending improvement request to Gemini...")
+        logger.info(f"   Total prompt length: {len(prompt)} characters")
+        logger.info(f"   Model: {model_name}")
+        logger.info(f"   Temperature: 0.7")
+        logger.info(f"   Max tokens: 8000")
         
-        response = model.generate_content(prompt)
-        logger.info("Received response from Gemini")
-        
-        improved_text = response.text
-        logger.info(f"Improved text length: {len(improved_text) if improved_text else 0}")
+        try:
+            response = model.generate_content(prompt)
+            logger.info("✓ Received response from Gemini")
+            
+            improved_text = response.text
+            logger.info(f"✓ Improved text length: {len(improved_text) if improved_text else 0} characters")
+            logger.info(f"   Original length: {len(original_text)} characters")
+            logger.info(f"   Change: {len(improved_text) - len(original_text):+d} characters")
+            logger.info(f"Improved text preview (first 300 chars):\n{improved_text[:300]}")
+            
+            # Check if text actually changed
+            if improved_text.strip() == original_text.strip():
+                logger.warning("⚠️ WARNING: Improved text is IDENTICAL to original text!")
+                logger.warning("   This suggests the AI did not make any changes.")
+            elif len(improved_text) < len(original_text) * 0.8:
+                logger.warning("⚠️ WARNING: Improved text is significantly SHORTER than original!")
+            else:
+                logger.info("✓ Text was successfully improved")
+                
+        except Exception as improvement_error:
+            logger.error(f"✗ Improvement request failed: {str(improvement_error)}")
+            raise
         
         # Save improvement analysis to file
         if file_id:
+            logger.info(f"💾 Saving improvement analysis to file...")
             save_improvement_analysis(original_text, improved_text, improvement_suggestions, file_id)
         
-        return improved_text.strip() if improved_text else original_text
+        final_text = improved_text.strip() if improved_text else original_text
+        logger.info("=" * 80)
+        logger.info("✓ RESUME IMPROVEMENT COMPLETED SUCCESSFULLY")
+        logger.info(f"   Final text length: {len(final_text)} characters")
+        logger.info("=" * 80)
+        return final_text
         
     except Exception as e:
-        logger.error(f"AI service error: {str(e)}", exc_info=True)
+        logger.error("=" * 80)
+        logger.error(f"✗ AI SERVICE ERROR: {str(e)}")
+        logger.error("=" * 80)
+        logger.error("Full error details:", exc_info=True)
+        logger.warning("⚠️ Falling back to simulation mode...")
+        
         improved = simulate_improvement(original_text)
+        logger.info(f"Simulation result length: {len(improved)} characters")
+        
         if file_id:
-            save_improvement_analysis(original_text, improved, f"Error occurred: {str(e)}\nUsed simulation mode", file_id)
+            save_improvement_analysis(original_text, improved, f"ERROR: {str(e)}\n\nFell back to simulation mode", file_id)
+        
+        logger.info("=" * 80)
+        logger.info("✓ COMPLETED WITH SIMULATION MODE")
+        logger.info("=" * 80)
         return improved
 
 def save_improvement_analysis(original_text: str, improved_text: str, suggestions: str, file_id: str):

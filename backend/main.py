@@ -7,6 +7,10 @@ from datetime import datetime
 import uuid
 import logging
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from backend.services.pdf_service import extract_text_from_pdf, generate_improved_pdf
 from backend.services.ai_service import improve_resume_text
@@ -18,6 +22,22 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Log environment configuration on startup
+logger.info("=" * 80)
+logger.info("BACKEND STARTUP - ENVIRONMENT CHECK")
+logger.info("=" * 80)
+api_key = os.getenv("GEMINI_API_KEY", "")
+model = os.getenv("LLM_MODEL", "")
+if api_key:
+    logger.info(f"✓ GEMINI_API_KEY loaded: {api_key[:10]}...{api_key[-5:]}")
+else:
+    logger.error("✗ GEMINI_API_KEY NOT FOUND!")
+if model:
+    logger.info(f"✓ LLM_MODEL: {model}")
+else:
+    logger.warning("⚠️ LLM_MODEL not set, will use default")
+logger.info("=" * 80)
 
 app = FastAPI(title="Resume Improver API")
 
@@ -69,17 +89,36 @@ async def upload_resume(
             f.write(contents)
         logger.info(f"File saved successfully. Size: {len(contents)} bytes")
         
-        logger.info("Starting text extraction...")
+        logger.info("=" * 80)
+        logger.info("STEP 1: TEXT EXTRACTION")
+        logger.info("=" * 80)
         original_text = extract_text_from_pdf(original_path)
-        logger.info(f"Text extraction complete. Length: {len(original_text)} chars")
+        logger.info(f"✓ Text extraction complete")
+        logger.info(f"   Extracted length: {len(original_text)} characters")
+        logger.info(f"   Preview (first 200 chars): {original_text[:200]}")
         
         if not original_text.strip():
-            logger.error("Extracted text is empty")
+            logger.error("✗ Extracted text is empty!")
             raise HTTPException(status_code=400, detail="Could not extract text from PDF")
         
-        logger.info("Sending text to AI service for improvement...")
+        logger.info("=" * 80)
+        logger.info("STEP 2: AI IMPROVEMENT")
+        logger.info(f"   Template: {template_id}")
+        logger.info("=" * 80)
         improved_text = await improve_resume_text(original_text, file_id, template_id)
-        logger.info(f"AI improvement complete. Length: {len(improved_text)} chars")
+        logger.info("=" * 80)
+        logger.info("✓ AI improvement complete")
+        logger.info(f"   Original length: {len(original_text)} characters")
+        logger.info(f"   Improved length: {len(improved_text)} characters")
+        logger.info(f"   Difference: {len(improved_text) - len(original_text):+d} characters")
+        
+        # Check if texts are identical
+        if original_text.strip() == improved_text.strip():
+            logger.warning("⚠️⚠️⚠️ WARNING: ORIGINAL AND IMPROVED TEXT ARE IDENTICAL! ⚠️⚠️⚠️")
+            logger.warning("   This indicates the AI improvement did not work!")
+        else:
+            logger.info("✓ Text was successfully modified")
+        logger.info("=" * 80)
         
         improved_path = os.path.join(OUTPUT_DIR, f"{file_id}_improved.pdf")
         logger.info(f"Generating improved PDF at {improved_path}")
