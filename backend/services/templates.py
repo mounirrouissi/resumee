@@ -36,178 +36,191 @@ class ProfessionalTemplate(CVTemplate):
     def __init__(self):
         super().__init__()
         self.id = "professional"
-        self.name = "Professional"
-        self.description = "Clean ATS-optimized layout perfect for corporate roles"
+        self.name = "Harvard CV Format"
+        self.description = "Traditional Harvard-style CV with centered header, perfect for academic and professional roles"
         self.preview_image = "professional_preview.png"
     
     def get_styles(self) -> Dict[str, ParagraphStyle]:
-        """Professional template styles - clean and ATS-friendly."""
+        """Professional template styles - Harvard CV Format."""
         from reportlab.lib.styles import getSampleStyleSheet
         
         base_styles = getSampleStyleSheet()
         
         return {
             'name': ParagraphStyle(
-                'ATSName',
+                'HarvardName',
                 parent=base_styles['Normal'],
-                fontName='Helvetica-Bold',
-                fontSize=14,
+                fontName='Times-Bold',
+                fontSize=16,
                 textColor=colors.HexColor('#000000'),
-                spaceAfter=4,
-                alignment=TA_LEFT,
-                leading=16
+                spaceAfter=2,
+                alignment=TA_CENTER,
+                leading=18
             ),
             'job_title': ParagraphStyle(
-                'ATSJobTitle',
+                'HarvardJobTitle',
                 parent=base_styles['Normal'],
-                fontName='Helvetica',
-                fontSize=12,
+                fontName='Times-Roman',
+                fontSize=11,
                 textColor=colors.HexColor('#000000'),
-                spaceAfter=4,
-                alignment=TA_LEFT
+                spaceAfter=2,
+                alignment=TA_CENTER
             ),
             'contact': ParagraphStyle(
-                'ATSContact',
+                'HarvardContact',
                 parent=base_styles['Normal'],
-                fontName='Helvetica',
-                fontSize=11,
+                fontName='Times-Roman',
+                fontSize=10,
                 textColor=colors.HexColor('#000000'),
                 spaceAfter=12,
-                alignment=TA_LEFT
+                alignment=TA_CENTER
             ),
             'section_heading': ParagraphStyle(
-                'ATSHeading',
+                'HarvardHeading',
                 parent=base_styles['Normal'],
-                fontName='Helvetica-Bold',
-                fontSize=12,
-                textColor=colors.HexColor('#000000'),
-                spaceAfter=8,
-                spaceBefore=12,
-                alignment=TA_LEFT,
-                leading=14
-            ),
-            'body': ParagraphStyle(
-                'ATSBody',
-                parent=base_styles['Normal'],
-                fontName='Helvetica',
+                fontName='Times-Bold',
                 fontSize=11,
                 textColor=colors.HexColor('#000000'),
+                spaceAfter=4,
+                spaceBefore=10,
                 alignment=TA_LEFT,
-                spaceAfter=6,
                 leading=13
             ),
-            'bullet': ParagraphStyle(
-                'ATSBullet',
+            'body': ParagraphStyle(
+                'HarvardBody',
                 parent=base_styles['Normal'],
-                fontName='Helvetica',
-                fontSize=11,
+                fontName='Times-Roman',
+                fontSize=10,
                 textColor=colors.HexColor('#000000'),
                 alignment=TA_LEFT,
                 spaceAfter=4,
+                leading=12
+            ),
+            'bullet': ParagraphStyle(
+                'HarvardBullet',
+                parent=base_styles['Normal'],
+                fontName='Times-Roman',
+                fontSize=10,
+                textColor=colors.HexColor('#000000'),
+                alignment=TA_LEFT,
+                spaceAfter=3,
                 leftIndent=20,
                 bulletIndent=10,
-                leading=13
+                leading=12
             ),
             'divider': ParagraphStyle(
-                'ATSDivider',
+                'HarvardDivider',
                 parent=base_styles['Normal'],
-                fontName='Helvetica',
-                fontSize=8,
-                textColor=colors.HexColor('#333333'),
-                spaceAfter=6,
-                spaceBefore=6,
+                fontName='Times-Roman',
+                fontSize=10,
+                textColor=colors.HexColor('#000000'),
+                spaceAfter=4,
+                spaceBefore=2,
                 alignment=TA_LEFT
             ),
         }
     
     def get_system_prompt(self) -> str:
-        """System prompt for Professional template."""
-        return """You are an expert resume improvement assistant specialized in creating ATS-optimized, professional resumes.
+        """System prompt for Professional template - Harvard CV Format."""
+        return """You are an expert resume improvement assistant specialized in creating Harvard-style CVs that are ATS-optimized and professionally formatted.
 
-CRITICAL FORMATTING REQUIREMENTS:
+HARVARD CV FORMAT REQUIREMENTS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ATS OPTIMIZATION RULES (MUST FOLLOW):
-1. Use ONLY standard fonts: Arial, Calibri, Helvetica, Times New Roman
-2. NO photos, graphics, tables, text boxes, icons, or fancy fonts
-3. Use simple text formatting with clear section headings
-4. Reverse-chronological order (most recent first)
-5. Include quantifiable achievements with metrics
-6. Use strong action verbs
-7. Keep sections clearly separated with visual dividers
+FORMATTING RULES:
+1. Use ONLY standard fonts: Times New Roman, Garamond, or similar serif fonts
+2. Clean, traditional layout with clear section headings
+3. Reverse-chronological order (most recent first)
+4. NO photos, graphics, tables, or fancy formatting
+5. Use consistent spacing and alignment
+6. Professional, academic tone
 
-RECRUITER PREFERENCES:
-• Recruiters spend 6-10 seconds scanning resumes
-• Clean layout with clear section headings
-• Easy-to-locate information
-• Career trajectory must be immediately visible
-
-REQUIRED OUTPUT STRUCTURE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HARVARD CV STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 YOUR FULL NAME
-Target Job Title
-City, Country | Phone | Email | linkedin.com/in/yourprofile
+Street Address, City, State ZIP Code
+Phone: (XXX) XXX-XXXX | Email: your.email@example.com | LinkedIn: linkedin.com/in/yourprofile
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROFESSIONAL SUMMARY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[3-4 sentences: professional identity + years of experience + top achievement with metrics + key skills]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-WORK EXPERIENCE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Job Title | Company Name | Location | MM/YYYY - MM/YYYY
-• [Action verb] + [what you did] + [result with number]
-• [Action verb] + [what you did] + [result with number]
-• [Action verb] + [what you did] + [result with number]
-
-Previous Job Title | Company | Location | MM/YYYY - MM/YYYY
-• [Achievement bullet with quantified impact]
-• [Achievement bullet with quantified impact]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EDUCATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Degree, Major | University Name | Graduation Date
+─────────────────────────────────────────────────────────────
+University Name, Location
+Degree, Major (GPA: X.XX/4.00)                                                    Month Year - Month Year
+• Relevant coursework: Course 1, Course 2, Course 3
+• Honors/Awards: Dean's List, Scholarship Name
+• Activities: Club Name, Organization Name
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Previous Institution, Location
+Degree/Certificate                                                                 Month Year - Month Year
+
+EXPERIENCE
+─────────────────────────────────────────────────────────────
+Job Title, Company Name, Location                                                  Month Year - Month Year
+• Action verb describing responsibility or achievement with quantifiable results
+• Action verb describing responsibility or achievement with quantifiable results
+• Action verb describing responsibility or achievement with quantifiable results
+• Focus on impact, metrics, and outcomes
+
+Previous Job Title, Company Name, Location                                         Month Year - Month Year
+• Achievement with specific metrics and results
+• Achievement with specific metrics and results
+
 SKILLS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Skill 1 | Skill 2 | Skill 3 | Skill 4 | Skill 5 | Skill 6
+─────────────────────────────────────────────────────────────
+Technical: Skill 1, Skill 2, Skill 3, Skill 4, Skill 5
+Languages: Language 1 (Proficiency), Language 2 (Proficiency)
+Certifications: Certification Name (Year), Certification Name (Year)
 
-IMPROVEMENT GUIDELINES:
-1. Preserve all factual information (names, dates, companies, education)
-2. Use strong action verbs (Led, Developed, Achieved, Increased, etc.)
-3. Quantify all achievements with numbers, percentages, or metrics
-4. Improve clarity and conciseness
-5. Maintain professional tone
-6. Optimize for Applicant Tracking Systems (ATS)
-7. Remove redundancies and filler words
-8. Highlight key accomplishments with measurable impact
-9. Use consistent formatting throughout
-10. Ensure each bullet starts with an action verb
+ADDITIONAL SECTIONS (if applicable):
+─────────────────────────────────────────────────────────────
+LEADERSHIP & ACTIVITIES
+Organization Name, Role                                                            Month Year - Month Year
+• Description of leadership role and impact
 
-FORMATTING SPECIFICATIONS:
-• Font Size: 10-12pt for body text
-• Headings: 12-14pt, bold
-• Margins: 0.5-1 inch
-• Use pipe separators (|) not slashes or commas
-• Section dividers: Use the exact line pattern shown above
-• Date format: MM/YYYY - MM/YYYY or MM/YYYY - Present
+PUBLICATIONS & RESEARCH (if applicable)
+• Author(s). "Title of Publication." Journal/Conference Name, Year.
+
+AWARDS & HONORS (if applicable)
+• Award Name, Issuing Organization, Year
+
+HARVARD CV BEST PRACTICES:
+1. Name should be prominent at the top (14-16pt)
+2. Contact information directly below name (10-11pt)
+3. Education comes FIRST (especially for recent graduates)
+4. Use consistent date alignment (right-aligned)
+5. Section headings in ALL CAPS or bold
+6. Use simple horizontal lines (─) as section dividers
+7. Bullet points for all descriptions
+8. Quantify achievements with numbers, percentages, dollar amounts
+9. Strong action verbs: Led, Developed, Managed, Achieved, Increased, etc.
+10. Keep to 1 page for early career, 2 pages maximum for experienced professionals
+
+CONTENT GUIDELINES:
+• Be specific and quantifiable (increased sales by 25%, managed team of 10)
+• Focus on achievements, not just responsibilities
+• Use past tense for previous roles, present tense for current role
+• Tailor content to target position
+• Remove personal pronouns (I, me, my)
+• Avoid abbreviations without context
+• Use consistent formatting throughout
+
+DATE FORMAT:
+• Use: January 2023 - Present OR Jan 2023 - Present
+• Use: September 2020 - May 2024
+• Be consistent throughout the document
 
 WHAT TO AVOID:
+❌ Objective statements (outdated)
 ❌ Photos or headshots
 ❌ Graphics, charts, or icons
-❌ Tables or text boxes
-❌ Multiple columns (complex layouts)
+❌ Multiple columns
 ❌ Fancy fonts or colors
 ❌ Weak verbs (helped, worked on, responsible for)
 ❌ Vague statements without metrics
-❌ Personal pronouns (I, me, my)
-❌ Abbreviations without context
+❌ Personal information (age, marital status, etc.)
+❌ References (provide separately when requested)
 
-Return ONLY the improved resume text following the EXACT structure above with section dividers."""
+Return ONLY the improved CV text following the EXACT Harvard format structure above."""
 
 
 # Template registry

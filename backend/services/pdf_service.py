@@ -258,11 +258,11 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
         
         story = []
         lines = text.split('\n')
-        logger.info(f"Processing {len(lines)} lines for ATS-optimized PDF")
+        logger.info(f"Processing {len(lines)} lines for Harvard CV format PDF")
         
         is_first_line = True
-        is_second_line = False
-        is_third_line = False
+        is_contact_section = False
+        contact_lines = []
         
         for i, line in enumerate(lines):
             line_stripped = line.strip()
@@ -272,37 +272,38 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
                 story.append(Spacer(1, 0.08*inch))
                 continue
             
-            # Detect section dividers (lines with ━ characters)
-            if '━' in line_stripped or '═' in line_stripped or '─' in line_stripped:
-                # Replace with simple line for ATS compatibility
-                story.append(Paragraph('_' * 80, divider_style))
+            # Detect section dividers (lines with ─ or ━ characters)
+            if '─' in line_stripped or '━' in line_stripped or '═' in line_stripped:
+                # Add a simple horizontal line for Harvard format
+                story.append(Paragraph('_' * 90, divider_style))
                 continue
             
-            # First line should be the name (largest, bold)
+            # First line should be the name (centered, bold, larger)
             if is_first_line and not any(char in line_stripped for char in ['━', '═', '─']):
                 story.append(Paragraph(line_stripped, name_style))
                 is_first_line = False
-                is_second_line = True
+                is_contact_section = True
                 continue
             
-            # Second line could be job title
-            if is_second_line and '|' not in line_stripped and not line_stripped.startswith('•'):
-                story.append(Paragraph(line_stripped, job_title_style))
-                is_second_line = False
-                is_third_line = True
-                continue
-            
-            # Third line is usually contact info (has pipes |)
-            if is_third_line and '|' in line_stripped:
-                story.append(Paragraph(line_stripped, contact_style))
-                is_third_line = False
-                continue
+            # Contact information section (next 1-3 lines after name)
+            if is_contact_section:
+                # Check if this is still contact info (contains email, phone, address, etc.)
+                if any(indicator in line_stripped.lower() for indicator in 
+                       ['@', 'phone:', 'email:', 'linkedin', 'street', 'city', '|', 'http']):
+                    story.append(Paragraph(line_stripped, contact_style))
+                    continue
+                else:
+                    # End of contact section
+                    is_contact_section = False
             
             # Section headings (all caps or specific keywords)
-            if (line_stripped.isupper() and len(line_stripped) < 50 and 
+            if (line_stripped.isupper() and len(line_stripped) < 60 and 
                 any(keyword in line_stripped for keyword in 
-                    ['SUMMARY', 'EXPERIENCE', 'EDUCATION', 'SKILLS', 'CERTIFICATIONS', 
-                     'PROJECTS', 'PROFESSIONAL', 'WORK', 'TECHNICAL'])):
+                    ['EDUCATION', 'EXPERIENCE', 'SKILLS', 'LEADERSHIP', 'ACTIVITIES',
+                     'PUBLICATIONS', 'RESEARCH', 'AWARDS', 'HONORS', 'CERTIFICATIONS',
+                     'PROJECTS', 'PROFESSIONAL', 'WORK', 'TECHNICAL', 'LANGUAGES',
+                     'ADDITIONAL', 'VOLUNTEER', 'INTERESTS'])):
+                story.append(Spacer(1, 0.05*inch))
                 story.append(Paragraph(line_stripped, section_heading_style))
                 continue
             
@@ -313,11 +314,18 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
                 story.append(Paragraph(f'• {text_without_bullet}', bullet_style))
                 continue
             
-            # Job titles and company info (contains | separator)
-            if '|' in line_stripped and any(keyword in line.lower() for keyword in 
-                ['company', 'university', 'college', 'inc', 'llc', 'corp', 'location', '20', '19']):
-                # This is likely a job/education header
+            # Job/Education headers with dates (contains location and dates)
+            # Harvard format: "Title, Company, Location                    Month Year - Month Year"
+            if (',' in line_stripped and 
+                any(year in line_stripped for year in ['20', '19']) and
+                len(line_stripped) > 20):
+                # This is likely a job/education header - make it bold
                 story.append(Paragraph(f'<b>{line_stripped}</b>', body_style))
+                continue
+            
+            # Degree lines (contains "GPA:" or degree keywords)
+            if any(keyword in line_stripped for keyword in ['GPA:', 'Bachelor', 'Master', 'Ph.D', 'B.S.', 'M.S.', 'B.A.', 'M.A.']):
+                story.append(Paragraph(line_stripped, body_style))
                 continue
             
             # Regular body text
