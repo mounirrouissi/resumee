@@ -219,7 +219,11 @@ Provide ONLY a bullet-point list of specific improvements."""
             save_improvement_analysis(original_text, improved, f"ERROR: {str(e)}\n\nFell back to simulation mode", file_id)
         
         logger.info("=" * 80)
-        logger.info("✓ COMPLETED WITH SIMULATION MODE")
+        logger.warning("⚠️ COMPLETED WITH SIMULATION MODE (LIMITED IMPROVEMENTS)")
+        logger.warning("   To get full Harvard CV formatting with AI:")
+        logger.warning("   1. Get a new API key from https://makersuite.google.com/app/apikey")
+        logger.warning("   2. Update .env file with new key")
+        logger.warning("   3. Restart backend")
         logger.info("=" * 80)
         return improved
 

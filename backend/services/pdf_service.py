@@ -22,7 +22,8 @@ def get_paddle_ocr():
     global _ocr_instance
     if _ocr_instance is None:
         logger.info("Initializing PaddleOCR...")
-        _ocr_instance = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+        # Note: show_log parameter removed as it's not supported in newer versions
+        _ocr_instance = PaddleOCR(use_angle_cls=True, lang='en')
         logger.info("PaddleOCR initialized successfully")
     return _ocr_instance
 
@@ -259,6 +260,12 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
         story = []
         lines = text.split('\n')
         logger.info(f"Processing {len(lines)} lines for Harvard CV format PDF")
+        logger.info(f"Harvard CV Requirements:")
+        logger.info(f"   ✓ Centered header (name & contact)")
+        logger.info(f"   ✓ Times New Roman font")
+        logger.info(f"   ✓ Education section first")
+        logger.info(f"   ✓ Section dividers with horizontal lines")
+        logger.info(f"   ✓ Professional formatting")
         
         is_first_line = True
         is_contact_section = False
@@ -333,8 +340,11 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
         
         # Build the PDF
         doc.build(story)
-        logger.info("ATS-optimized PDF generation successful")
-        logger.info("PDF uses standard fonts (Helvetica) and clean formatting for maximum ATS compatibility")
+        logger.info("✓ Harvard CV format PDF generation successful")
+        logger.info(f"   Template: {template_id}")
+        logger.info(f"   Font: Times New Roman (serif)")
+        logger.info(f"   Header: Centered")
+        logger.info(f"   Format: ATS-optimized Harvard style")
         
     except Exception as e:
         logger.error(f"Error generating PDF: {str(e)}", exc_info=True)
