@@ -69,12 +69,20 @@ def extract_text_with_paddle_ocr(pdf_path: str) -> tuple[str, bool]:
             
             # Try original image first (works better for clean PDFs)
             logger.info(f"Page {i+1}: Processing with original image...")
-            result = ocr.ocr(img_array)
+            try:
+                result = ocr.ocr(img_array)
+            except Exception as ocr_error:
+                logger.warning(f"Page {i+1}: OCR error on original image: {str(ocr_error)}")
+                result = None
             
             # If result is poor, try with preprocessed image
             if not result or not result[0] or len(result[0]) < 5:
                 logger.info(f"Page {i+1}: Retrying with preprocessed image...")
-                result = ocr.ocr(denoised)
+                try:
+                    result = ocr.ocr(denoised)
+                except Exception as ocr_error:
+                    logger.warning(f"Page {i+1}: OCR error on preprocessed image: {str(ocr_error)}")
+                    result = None
             
             if result and result[0]:
                 page_text = []
