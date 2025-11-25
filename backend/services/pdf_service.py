@@ -22,9 +22,13 @@ def get_paddle_ocr():
     global _ocr_instance
     if _ocr_instance is None:
         logger.info("Initializing PaddleOCR...")
-        # Note: show_log parameter removed as it's not supported in newer versions
-        _ocr_instance = PaddleOCR(use_angle_cls=True, lang='en')
-        logger.info("PaddleOCR initialized successfully")
+        # Note: Simplified initialization for compatibility with newer PaddleOCR versions
+        try:
+            _ocr_instance = PaddleOCR(lang='en')
+            logger.info("PaddleOCR initialized successfully")
+        except Exception as e:
+            logger.error(f"PaddleOCR initialization failed: {str(e)}")
+            raise
     return _ocr_instance
 
 def extract_text_with_paddle_ocr(pdf_path: str) -> tuple[str, bool]:
@@ -65,12 +69,12 @@ def extract_text_with_paddle_ocr(pdf_path: str) -> tuple[str, bool]:
             
             # Try original image first (works better for clean PDFs)
             logger.info(f"Page {i+1}: Processing with original image...")
-            result = ocr.ocr(img_array, cls=True)
+            result = ocr.ocr(img_array)
             
             # If result is poor, try with preprocessed image
             if not result or not result[0] or len(result[0]) < 5:
                 logger.info(f"Page {i+1}: Retrying with preprocessed image...")
-                result = ocr.ocr(denoised, cls=True)
+                result = ocr.ocr(denoised)
             
             if result and result[0]:
                 page_text = []
