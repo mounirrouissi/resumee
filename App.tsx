@@ -7,9 +7,20 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import MainTabNavigator from "@/navigation/MainTabNavigator";
+import LoginScreen from "@/screens/LoginScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ResumeProvider } from "@/contexts/ResumeContext";
-import { UserProvider } from "@/contexts/UserContext";
+import { UserProvider, useUser } from "@/contexts/UserContext";
+
+function AppContent() {
+  const { isAuthenticated } = useUser();
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <MainTabNavigator /> : <LoginScreen />}
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   return (
@@ -19,9 +30,7 @@ export default function App() {
           <KeyboardProvider>
             <UserProvider>
               <ResumeProvider>
-                <NavigationContainer>
-                  <MainTabNavigator />
-                </NavigationContainer>
+                <AppContent />
                 <StatusBar style="auto" />
               </ResumeProvider>
             </UserProvider>

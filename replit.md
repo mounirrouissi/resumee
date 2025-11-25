@@ -15,7 +15,18 @@ An AI-powered mobile and web application that analyzes and improves resumes/CVs 
 - **Database**: File-based uploads/outputs
 - **AI**: Google Generative AI API (Gemini)
 
-## Recent Changes (Nov 24, 2025)
+## Recent Changes (Nov 25, 2025)
+1. Added Google authentication with OAuth integration
+2. Implemented "Continue as guest" functionality
+3. Updated UserContext to manage authentication state (Google vs guest)
+4. Created LoginScreen with Google sign-in button and guest option
+5. Updated ProfileScreen to show different UI for authenticated vs guest users
+   - Google users see their name, email, and profile picture
+   - Guest users can edit their display name
+   - All users can sign out to return to login screen
+6. Installed OAuth dependencies (expo-auth-session, expo-web-browser)
+
+## Previous Changes (Nov 24, 2025)
 1. Updated PDF text extraction to use PaddleOCR instead of PyPDF2 for better accuracy
 2. Lazy-loaded OCR instance to avoid startup delays
 3. Installed all required dependencies (paddle, paddleocr, fastapi, uvicorn, etc.)
@@ -23,8 +34,41 @@ An AI-powered mobile and web application that analyzes and improves resumes/CVs 
 5. Set up environment for Replit deployment
 
 ## Environment Variables
-- `GEMINI_API_KEY`: Google Gemini API key (required)
+
+### AI Configuration
+- `GEMINI_API_KEY`: Google Gemini API key (required for AI features)
 - `LLM_MODEL`: Set to `gemini-1.5-flash` by default
+
+### Stripe Payment Configuration (Optional)
+To enable credit-based document generation with Stripe:
+
+1. Sign up at [Stripe](https://stripe.com) and get your API keys
+2. Add these environment variables:
+   - `STRIPE_SECRET_KEY`: Your Stripe secret key (starts with `sk_test_` for test mode)
+   - `STRIPE_WEBHOOK_SECRET`: Webhook signing secret from Stripe Dashboard
+   - `BASE_URL`: Your app's public URL (e.g., `https://your-app.replit.dev`)
+
+**Payment Features:**
+- Users get 1 free credit on first upload
+- Credit packs: 1 credit ($1.99), 5 credits ($7.99), 12 credits ($15.99)
+- Watermarked previews available without credits
+- Secure payment processing via Stripe Checkout
+
+**Testing:** Run `bash backend/tests/test_payments.sh` to test the payment flow
+
+### Google OAuth Configuration (Optional)
+To enable Google sign-in on the app, you need to set up OAuth credentials:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials (Web, Android, iOS)
+5. Add the following environment variables:
+   - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`: Web client ID
+   - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`: Android client ID
+   - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`: iOS client ID
+
+**Note**: The app works fully in guest mode without Google OAuth configured.
 
 ## File Structure
 ```
