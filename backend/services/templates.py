@@ -231,50 +231,45 @@ HARVARD CV BEST PRACTICES:
 1. Name: Centered, 20-22pt bold
 2. Contact: SINGLE LINE centered with • separators (9-11pt)
 3. Education comes FIRST (especially for recent graduates)
-4. Use reverse chronological order (most recent first)
-5. Section headings: BOLD, ALL CAPS (e.g., EDUCATION, EXPERIENCE, SKILLS)
-6. Horizontal lines (─) under each section header
-7. Bullet points: simple • character, consistent indentation
-8. Quantify achievements (numbers, percentages, dollar amounts)
-9. Strong action verbs: Led, Developed, Managed, Achieved, Increased
-10. Length: 1 page for ≤10 years experience; 2 pages for senior roles
-
-WRITING STRONG BULLET POINTS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-FORMULA: [Action Verb] + [What you did] + [Measurable outcome/impact]
-
-STRONG ACTION VERBS BY CATEGORY:
-• Leadership: Led, Directed, Managed, Coordinated, Supervised, Mentored
-• Achievement: Achieved, Exceeded, Delivered, Accomplished, Attained
-• Improvement: Optimized, Enhanced, Improved, Streamlined, Increased, Reduced
-• Creation: Developed, Designed, Built, Created, Launched, Established
-• Analysis: Analyzed, Assessed, Evaluated, Researched, Investigated
-• Communication: Presented, Communicated, Collaborated, Negotiated
-
-❌ WEAK (vague, no outcome):
-• Responsible for managing social media accounts
-• Helped with customer service
-• Worked on website redesign project
-
-✅ STRONG (action verb + specific outcome):
-• Increased social media engagement by 150% over 6 months, growing followers from 2,000 to 5,000
-• Resolved 95% of customer inquiries within 24 hours, maintaining 4.8/5.0 satisfaction rating
-• Led website redesign project, improving page load time by 40% and increasing conversions by 25%
-
-QUANTIFICATION EXAMPLES:
-• Revenue/Budget: "Managed $2M budget" / "Increased revenue by $500K"
-• Percentages: "Reduced costs by 30%" / "Improved efficiency by 45%"
-• Time: "Delivered project 2 months ahead of schedule" / "Reduced processing time from 5 days to 2 days"
-• Scale: "Served 10,000+ users" / "Managed team of 8 developers"
-• Volume: "Processed 500+ applications monthly" / "Generated 50+ qualified leads per quarter"
+4. Use consistent date alignment (right-aligned)
+5. Section headings MUST be in ALL CAPS AND BOLD (e.g., EDUCATION, EXPERIENCE, SKILLS)
+6. Use simple horizontal lines (─) as section dividers
+7. Bullet points MUST be properly aligned with consistent indentation
+8. Each bullet point should start with • character
+9. Bullet text should be aligned and not overlap with the bullet character
+10. Quantify achievements with numbers, percentages, dollar amounts
+11. Strong action verbs: Led, Developed, Managed, Achieved, Increased, etc.
+12. Keep to 1 page for early career, 2 pages maximum for experienced professionals
 
 CRITICAL FORMATTING RULES:
-• Section titles (EDUCATION, EXPERIENCE, SKILLS) MUST be BOLD and ALL CAPS
-• Contact MUST be on ONE LINE with • separators (not multiple lines!)
+• Section titles (EDUCATION, EXPERIENCE, SKILLS, etc.) MUST be in BOLD and ALL CAPS
 • Bullet points MUST have proper spacing and alignment
-• Bullet character (•) followed by space before text
-• All bullets under same section should align perfectly
+• Use consistent indentation throughout (typically 0.25-0.5 inch from left margin)
+• Bullet character (•) should be followed by a space before text
+• All bullets under the same section should align perfectly
+• No overlapping text or misaligned bullets
+
+CONTENT GUIDELINES:
+• Be specific and quantifiable (increased sales by 25%, managed team of 10)
+• Focus on achievements, not just responsibilities
+• Use past tense for previous roles, present tense for current role
+• Tailor content to target position
+• Remove personal pronouns (I, me, my)
+• Avoid abbreviations without context
+• Use consistent formatting throughout
+
+OCR TEXT CLEANUP:
+• Fix spelling and grammar errors from OCR
+• Remove OCR artifacts (repeated characters, garbled text)
+• Reconstruct words split across lines
+• Correct spacing issues
+• Fix date formatting inconsistencies
+• Merge fragmented contact information
+
+DATE FORMAT:
+• Use: January 2023 - Present OR Jan 2023 - Present
+• Use: September 2020 - May 2024
+• Be consistent throughout the document
 
 WHAT TO AVOID:
 ❌ OBJECTIVE statements (completely outdated - remove them entirely!)
@@ -295,7 +290,7 @@ OUTPUT FORMAT WITH FORMATTING MARKERS:
 Use these EXACT markers to indicate structure:
 
 [TITLE: text] - Main name/title (will be centered, large, bold)
-[CONTACT: item] - SINGLE LINE with all contact info separated by •
+[CONTACT: item] - Each contact piece (will be centered)
 [SECTION: header] - Major sections like EDUCATION, EXPERIENCE, SKILLS (will be BOLD, ALL CAPS, with underline)
 [SUBSECTION: text] - Job titles, company names, degrees (will be bold)
 [DATE: date] - All dates (format: Month YYYY - Month YYYY)
@@ -304,14 +299,12 @@ Use these EXACT markers to indicate structure:
 [PARAGRAPH] followed by text - Paragraph content
 [SPACING] - Vertical space between sections
 
-CRITICAL EXAMPLES:
+CRITICAL: 
+- ALL section headers (EDUCATION, EXPERIENCE, SKILLS, etc.) MUST use [SECTION: ] marker
+- ALL bullet points MUST use [BULLET: ] marker for proper alignment
+- Section names MUST be in ALL CAPS (e.g., [SECTION: EDUCATION] not [SECTION: Education])
 
-✅ CORRECT CONTACT FORMAT (single line):
-[TITLE: JOHN SMITH]
-[CONTACT: Boston, MA • (555) 123-4567 • john.smith@email.com • linkedin.com/in/johnsmith]
-[SPACING]
-
-❌ WRONG CONTACT FORMAT (multiple lines - DO NOT USE):
+EXAMPLE OUTPUT (showing proper formatting):
 [TITLE: JOHN SMITH]
 [CONTACT: 123 Main Street, Boston, MA 02101]
 [CONTACT: Phone: (555) 123-4567]
@@ -333,22 +326,18 @@ FULL EXAMPLE OUTPUT:
 [SUBSECTION: Software Engineer, Tech Company Inc., Boston, MA]
 [DATE: June 2020 - Present]
 [BULLET: Developed and deployed 5 full-stack web applications using React and Node.js, serving 10,000+ users]
-[BULLET: Optimized database queries reducing load time by 40% and improving user experience significantly]
-[BULLET: Led cross-functional team of 8 developers to deliver major project 2 months ahead of schedule]
+[BULLET: Optimized database queries reducing load time by 40% and improving user experience]
+[BULLET: Led cross-functional team of 8 developers to deliver project 2 months ahead of schedule]
 [SPACING]
 [SECTION: SKILLS]
 [PARAGRAPH]
-[BOLD: Technical:] JavaScript, Python, React, Node.js, PostgreSQL, Docker, AWS, Git
+[BOLD: Technical:] JavaScript, Python, React, Node.js, PostgreSQL, Docker, AWS
 [BOLD: Languages:] English (Native), Spanish (Conversational)
-[BOLD: Certifications:] AWS Certified Developer (2022), Google Cloud Professional (2021)
 
-FINAL REMINDERS:
-- Contact info MUST be ONE LINE with • separators
-- NO OBJECTIVE section (remove completely)
-- Section headers in ALL CAPS and BOLD
-- Use [SECTION: ] marker for headers
-- Use [BULLET: ] marker for all bullet points
-- Quantify everything with numbers
+NOTE: In the final PDF:
+- "EDUCATION", "EXPERIENCE", "SKILLS" will appear in BOLD ALL CAPS with underline
+- All bullet points will be properly aligned with consistent indentation
+- Each bullet will have the • character followed by proper spacing
 
 Return ONLY the improved CV using these formatting markers."""
 
