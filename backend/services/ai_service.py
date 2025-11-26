@@ -32,7 +32,7 @@ RECRUITER PREFERENCES:
 • Easy-to-locate information
 • Career trajectory must be immediately visible
 
-REQUIRED OUTPUT STRUCTURE:
+REQUIRED OUTPUT STRUCTURE ( only add if icluded in original resume )):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 YOUR FULL NAME

@@ -93,23 +93,30 @@ class PDFFormatter:
                     logger.debug(f"Found BULLET: {content[:50]}...")
                     
             elif line.startswith('[PARAGRAPH]'):
-                # Collect paragraph lines until next marker
+                # Collect paragraph lines until next structural marker
+                # Structural markers: [TITLE:, [CONTACT:, [SECTION:, [SUBSECTION:, [DATE:, [BULLET:, [SPACING]
+                # Inline markers like [BOLD:] should NOT stop paragraph collection
+                structural_markers = ['[TITLE:', '[CONTACT:', '[SECTION:', '[SUBSECTION:', 
+                                     '[DATE:', '[BULLET:', '[SPACING]']
                 para_lines = []
                 i += 1
                 while i < len(lines):
                     next_line = lines[i].strip()
-                    if next_line.startswith('['):
+                    # Stop if empty line or structural marker (but NOT [PARAGRAPH] or inline [BOLD:])
+                    if not next_line:
+                        break
+                    if any(next_line.startswith(marker) for marker in structural_markers):
                         i -= 1  # Back up to process marker
                         break
-                    if next_line:
-                        para_lines.append(next_line)
+                    # Include lines with [BOLD:] markers
+                    para_lines.append(next_line)
                     i += 1
                 
                 if para_lines:
                     content = ' '.join(para_lines)
                     content = self._process_inline_bold(content)
                     elements.append({'type': 'paragraph', 'content': content})
-                    logger.debug(f"Found PARAGRAPH: {content[:50]}...")
+                    logger.debug(f"Found PARAGRAPH: {content[:100]}...")
                     
             elif line.startswith('[SPACING]'):
                 elements.append({'type': 'spacing'})
