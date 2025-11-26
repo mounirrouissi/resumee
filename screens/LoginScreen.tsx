@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, Pressable, Image, ActivityIndicator, Animated } from "react-native";
+import { StyleSheet, View, Pressable, Image, ActivityIndicator, Animated, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
@@ -7,6 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
 import { ThemedText } from "@/components/ThemedText";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography, Gradients, Shadows, Animations } from "@/constants/theme";
 import { useUser } from "@/contexts/UserContext";
@@ -19,10 +20,10 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Animation refs
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const floatAnim1 = useRef(new Animated.Value(0)).current;
   const floatAnim2 = useRef(new Animated.Value(0)).current;
+  const logoScaleAnim = useRef(new Animated.Value(0.8)).current;
 
   // Check if Google OAuth is configured
   const hasGoogleConfig = !!(
@@ -46,33 +47,25 @@ export default function LoginScreen() {
       useNativeDriver: true,
     }).start();
 
-    // Pulse animation for icon
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+    // Logo pop-in animation
+    Animated.spring(logoScaleAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
 
     // Floating animations for background shapes
     Animated.loop(
       Animated.sequence([
         Animated.timing(floatAnim1, {
           toValue: 1,
-          duration: 3000,
+          duration: 4000,
           useNativeDriver: true,
         }),
         Animated.timing(floatAnim1, {
           toValue: 0,
-          duration: 3000,
+          duration: 4000,
           useNativeDriver: true,
         }),
       ])
@@ -82,12 +75,12 @@ export default function LoginScreen() {
       Animated.sequence([
         Animated.timing(floatAnim2, {
           toValue: 1,
-          duration: 4000,
+          duration: 5000,
           useNativeDriver: true,
         }),
         Animated.timing(floatAnim2, {
           toValue: 0,
-          duration: 4000,
+          duration: 5000,
           useNativeDriver: true,
         }),
       ])
@@ -213,15 +206,16 @@ export default function LoginScreen() {
         <View style={styles.logoContainer}>
           <Animated.View
             style={[
-              styles.iconCircle,
-              {
-                backgroundColor: theme.primary,
-                transform: [{ scale: pulseAnim }],
-              },
+              styles.logoWrapper,
+              { transform: [{ scale: logoScaleAnim }] },
               Shadows.large
             ]}
           >
-            <Feather name="file-text" size={48} color={theme.buttonText} />
+            <Image
+              source={require("@/assets/images/logo.png")}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </Animated.View>
           <ThemedText style={[Typography.h1, styles.title]}>
             Resume Improver
@@ -233,39 +227,11 @@ export default function LoginScreen() {
 
         <View style={styles.buttonsContainer}>
           {hasGoogleConfig && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.googleButton,
-                {
-                  backgroundColor: theme.backgroundSecondary,
-                  borderColor: theme.border,
-                },
-                Shadows.medium,
-                pressed && styles.pressed,
-              ]}
+            <GoogleSignInButton
               onPress={handleGoogleSignIn}
-              disabled={!request || isLoading}
-            >
-              <BlurView
-                intensity={20}
-                tint={colorScheme === 'dark' ? 'dark' : 'light'}
-                style={styles.blurContainer}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color={theme.primary} />
-                ) : (
-                  <>
-                    <Image
-                      source={require("@/assets/images/google-icon.png")}
-                      style={styles.googleIcon}
-                    />
-                    <ThemedText style={[Typography.body, styles.buttonText]}>
-                      Continue with Google
-                    </ThemedText>
-                  </>
-                )}
-              </BlurView>
-            </Pressable>
+              isLoading={isLoading}
+              disabled={!request}
+            />
           )}
 
           <Pressable
@@ -328,13 +294,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.xl * 3,
   },
-  iconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  logoWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.xl,
+    overflow: 'hidden',
+  },
+  logo: {
+    width: 100,
+    height: 100,
   },
   title: {
     marginBottom: Spacing.sm,
@@ -346,27 +318,9 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     gap: Spacing.md,
-  },
-  googleButton: {
-    height: 56,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  blurContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.md,
-  },
-  googleIcon: {
-    width: 24,
-    height: 24,
-  },
-  buttonText: {
-    fontWeight: "600",
+    width: '100%',
+    maxWidth: 320,
+    alignSelf: 'center',
   },
   guestButton: {
     alignItems: "center",
@@ -408,4 +362,3 @@ const styles = StyleSheet.create({
     borderRadius: 75,
   },
 });
-

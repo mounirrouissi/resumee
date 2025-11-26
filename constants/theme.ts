@@ -5,42 +5,42 @@ const primaryDark = "#60A5FA";
 
 export const Colors = {
   light: {
-    text: "#111827",
-    textSecondary: "#6B7280",
+    text: "#0F172A", // Slate 900
+    textSecondary: "#64748B", // Slate 500
     buttonText: "#FFFFFF",
-    tabIconDefault: "#6B7280",
-    tabIconSelected: primaryLight,
-    link: primaryLight,
-    primary: primaryLight,
-    primaryLight: "#60A5FA",
-    primaryDark: "#1E40AF",
-    backgroundRoot: "#F9FAFB",
+    tabIconDefault: "#94A3B8", // Slate 400
+    tabIconSelected: "#4F46E5", // Indigo 600
+    link: "#4F46E5",
+    primary: "#4F46E5", // Indigo 600
+    primaryLight: "#818CF8", // Indigo 400
+    primaryDark: "#3730A3", // Indigo 800
+    backgroundRoot: "#F8FAFC", // Slate 50
     backgroundDefault: "#FFFFFF",
-    backgroundSecondary: "#F9FAFB",
-    backgroundTertiary: "#F3F4F6",
-    border: "#E5E7EB",
-    success: "#10B981",
-    error: "#EF4444",
-    warning: "#F59E0B",
+    backgroundSecondary: "#F1F5F9", // Slate 100
+    backgroundTertiary: "#E2E8F0", // Slate 200
+    border: "#E2E8F0", // Slate 200
+    success: "#10B981", // Emerald 500
+    error: "#EF4444", // Red 500
+    warning: "#F59E0B", // Amber 500
   },
   dark: {
-    text: "#F9FAFB",
-    textSecondary: "#9CA3AF",
+    text: "#F8FAFC", // Slate 50
+    textSecondary: "#94A3B8", // Slate 400
     buttonText: "#FFFFFF",
-    tabIconDefault: "#9CA3AF",
-    tabIconSelected: primaryDark,
-    link: primaryDark,
-    primary: primaryDark,
-    primaryLight: "#60A5FA",
-    primaryDark: "#1E40AF",
-    backgroundRoot: "#111827",
-    backgroundDefault: "#1F2937",
-    backgroundSecondary: "#111827",
-    backgroundTertiary: "#0F172A",
-    border: "#374151",
-    success: "#10B981",
-    error: "#EF4444",
-    warning: "#F59E0B",
+    tabIconDefault: "#64748B", // Slate 500
+    tabIconSelected: "#818CF8", // Indigo 400
+    link: "#818CF8",
+    primary: "#6366F1", // Indigo 500
+    primaryLight: "#818CF8", // Indigo 400
+    primaryDark: "#4338CA", // Indigo 700
+    backgroundRoot: "#0F172A", // Slate 900
+    backgroundDefault: "#1E293B", // Slate 800
+    backgroundSecondary: "#0F172A", // Slate 900
+    backgroundTertiary: "#334155", // Slate 700
+    border: "#334155", // Slate 700
+    success: "#34D399", // Emerald 400
+    error: "#F87171", // Red 400
+    warning: "#FBBF24", // Amber 400
   },
 };
 
