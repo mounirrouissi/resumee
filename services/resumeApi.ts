@@ -69,35 +69,57 @@ export const resumeApi = {
   },
 
   async uploadResume(fileUri: string, fileName: string, templateId: string = "professional"): Promise<UploadResumeResponse> {
-    const formData = new FormData();
-    
-    // For web
-    if (fileUri.startsWith('blob:') || fileUri.startsWith('data:')) {
-      const response = await fetch(fileUri);
-      const blob = await response.blob();
-      formData.append('file', blob, fileName);
-    } else {
-      // For mobile
-      formData.append('file', {
-        uri: fileUri,
-        type: 'application/pdf',
-        name: fileName,
-      } as any);
+    try {
+      console.log('📤 Uploading resume:', fileName);
+      const formData = new FormData();
+      
+      // For web
+      if (fileUri.startsWith('blob:') || fileUri.startsWith('data:')) {
+        const response = await fetch(fileUri);
+        const blob = await response.blob();
+        formData.append('file', blob, fileName);
+      } else {
+        // For mobile
+        formData.append('file', {
+          uri: fileUri,
+          type: 'application/pdf',
+          name: fileName,
+        } as any);
+      }
+      
+      formData.append('template_id', templateId);
+
+      console.log('🚀 Sending request to:', `${API_BASE_URL}/api/upload-resume`);
+      
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes timeout
+
+      const response = await fetch(`${API_BASE_URL}/api/upload-resume`, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(error.detail || `Failed to upload resume: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Resume processed successfully');
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - processing took too long. Please try again.');
+        }
+        console.error('❌ Upload error:', error.message);
+      }
+      throw error;
     }
-    
-    formData.append('template_id', templateId);
-
-    const response = await fetch(`${API_BASE_URL}/api/upload-resume`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to upload resume');
-    }
-
-    return response.json();
   },
 
   async downloadResume(fileId: string): Promise<Blob> {

@@ -180,33 +180,34 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         ocr_method_used = "None"
         extracted_text = ""
         
-        # Try PaddleOCR first (best for complex layouts and images)
-        logger.info("PRIMARY METHOD: Attempting PaddleOCR...")
-        text, success = extract_text_with_paddle_ocr(pdf_path)
+        # Try PyPDF2 FIRST (fast for digital PDFs - most common case)
+        logger.info("PRIMARY METHOD: Attempting PyPDF2 (fast for digital PDFs)...")
+        text, success = extract_text_with_pypdf2(pdf_path)
         if success and text.strip():
-            ocr_method_used = "PaddleOCR"
+            ocr_method_used = "PyPDF2 (Direct Text Extraction)"
             extracted_text = text
-            logger.info("✓ PaddleOCR succeeded!")
+            logger.info("✓ PyPDF2 succeeded! (Fast extraction)")
         else:
-            logger.warning("✗ PaddleOCR failed or returned empty text")
+            logger.warning("✗ PyPDF2 failed or returned empty text")
+            logger.info("   This might be a scanned PDF, trying OCR methods...")
             
-            # Try Tesseract as backup
-            logger.info("BACKUP METHOD: Attempting Tesseract OCR...")
-            text, success = extract_text_with_tesseract(pdf_path)
+            # Try PaddleOCR for scanned PDFs
+            logger.info("BACKUP METHOD: Attempting PaddleOCR (for scanned PDFs)...")
+            text, success = extract_text_with_paddle_ocr(pdf_path)
             if success and text.strip():
-                ocr_method_used = "Tesseract OCR"
+                ocr_method_used = "PaddleOCR"
                 extracted_text = text
-                logger.info("✓ Tesseract OCR succeeded!")
+                logger.info("✓ PaddleOCR succeeded!")
             else:
-                logger.warning("✗ Tesseract OCR failed or returned empty text")
+                logger.warning("✗ PaddleOCR failed or returned empty text")
                 
-                # Try PyPDF2 as final fallback
-                logger.info("FALLBACK METHOD: Attempting PyPDF2...")
-                text, success = extract_text_with_pypdf2(pdf_path)
+                # Try Tesseract as final fallback
+                logger.info("FALLBACK METHOD: Attempting Tesseract OCR...")
+                text, success = extract_text_with_tesseract(pdf_path)
                 if success and text.strip():
-                    ocr_method_used = "PyPDF2 (Direct Text Extraction)"
+                    ocr_method_used = "Tesseract OCR"
                     extracted_text = text
-                    logger.info("✓ PyPDF2 succeeded!")
+                    logger.info("✓ Tesseract OCR succeeded!")
                 else:
                     logger.error("✗ All extraction methods failed!")
                     raise Exception("All OCR methods failed to extract text")
