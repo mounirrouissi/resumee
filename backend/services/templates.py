@@ -257,12 +257,22 @@ HARVARD CV BEST PRACTICES:
 2. Contact information directly below name (10-11pt)
 3. Education comes FIRST (especially for recent graduates)
 4. Use consistent date alignment (right-aligned)
-5. Section headings in ALL CAPS or bold
+5. Section headings MUST be in ALL CAPS AND BOLD (e.g., EDUCATION, EXPERIENCE, SKILLS)
 6. Use simple horizontal lines (─) as section dividers
-7. Bullet points for all descriptions
-8. Quantify achievements with numbers, percentages, dollar amounts
-9. Strong action verbs: Led, Developed, Managed, Achieved, Increased, etc.
-10. Keep to 1 page for early career, 2 pages maximum for experienced professionals
+7. Bullet points MUST be properly aligned with consistent indentation
+8. Each bullet point should start with • character
+9. Bullet text should be aligned and not overlap with the bullet character
+10. Quantify achievements with numbers, percentages, dollar amounts
+11. Strong action verbs: Led, Developed, Managed, Achieved, Increased, etc.
+12. Keep to 1 page for early career, 2 pages maximum for experienced professionals
+
+CRITICAL FORMATTING RULES:
+• Section titles (EDUCATION, EXPERIENCE, SKILLS, etc.) MUST be in BOLD and ALL CAPS
+• Bullet points MUST have proper spacing and alignment
+• Use consistent indentation throughout (typically 0.25-0.5 inch from left margin)
+• Bullet character (•) should be followed by a space before text
+• All bullets under the same section should align perfectly
+• No overlapping text or misaligned bullets
 
 CONTENT GUIDELINES:
 • Be specific and quantifiable (increased sales by 25%, managed team of 10)
@@ -302,17 +312,22 @@ OUTPUT FORMAT WITH FORMATTING MARKERS:
 
 Use these EXACT markers to indicate structure:
 
-[TITLE: text] - Main name/title
-[CONTACT: item] - Each contact piece
-[SECTION: header] - Major sections (EDUCATION, EXPERIENCE, etc.)
-[SUBSECTION: text] - Job titles, company names, degrees
+[TITLE: text] - Main name/title (will be centered, large, bold)
+[CONTACT: item] - Each contact piece (will be centered)
+[SECTION: header] - Major sections like EDUCATION, EXPERIENCE, SKILLS (will be BOLD, ALL CAPS, with underline)
+[SUBSECTION: text] - Job titles, company names, degrees (will be bold)
 [DATE: date] - All dates (format: Month YYYY - Month YYYY)
-[BOLD: text] - Emphasis items
-[BULLET: text] - List items, achievements
+[BOLD: text] - Emphasis items within text
+[BULLET: text] - List items, achievements (will be properly indented with • character)
 [PARAGRAPH] followed by text - Paragraph content
 [SPACING] - Vertical space between sections
 
-EXAMPLE OUTPUT:
+CRITICAL: 
+- ALL section headers (EDUCATION, EXPERIENCE, SKILLS, etc.) MUST use [SECTION: ] marker
+- ALL bullet points MUST use [BULLET: ] marker for proper alignment
+- Section names MUST be in ALL CAPS (e.g., [SECTION: EDUCATION] not [SECTION: Education])
+
+EXAMPLE OUTPUT (showing proper formatting):
 [TITLE: JOHN SMITH]
 [CONTACT: 123 Main Street, Boston, MA 02101]
 [CONTACT: Phone: (555) 123-4567]
@@ -325,17 +340,24 @@ EXAMPLE OUTPUT:
 [DATE: September 2016 - May 2020]
 [BULLET: Relevant coursework: Data Structures, Algorithms, Machine Learning]
 [BULLET: Dean's List: Fall 2018, Spring 2019, Fall 2019]
+[BULLET: Activities: Computer Science Club President, Hackathon Organizer]
 [SPACING]
 [SECTION: EXPERIENCE]
 [SUBSECTION: Software Engineer, Tech Company Inc., Boston, MA]
 [DATE: June 2020 - Present]
 [BULLET: Developed and deployed 5 full-stack web applications using React and Node.js, serving 10,000+ users]
-[BULLET: Optimized database queries reducing load time by 40%]
+[BULLET: Optimized database queries reducing load time by 40% and improving user experience]
+[BULLET: Led cross-functional team of 8 developers to deliver project 2 months ahead of schedule]
 [SPACING]
 [SECTION: SKILLS]
 [PARAGRAPH]
-[BOLD: Technical:] JavaScript, Python, React, Node.js, PostgreSQL
+[BOLD: Technical:] JavaScript, Python, React, Node.js, PostgreSQL, Docker, AWS
 [BOLD: Languages:] English (Native), Spanish (Conversational)
+
+NOTE: In the final PDF:
+- "EDUCATION", "EXPERIENCE", "SKILLS" will appear in BOLD ALL CAPS with underline
+- All bullet points will be properly aligned with consistent indentation
+- Each bullet will have the • character followed by proper spacing
 
 Return ONLY the improved CV using these formatting markers."""
 
