@@ -26,6 +26,9 @@ const getBaseUrl = () => {
 
 const API_BASE_URL = getBaseUrl();
 
+// Log the API URL for debugging
+console.log('🔗 API Base URL:', API_BASE_URL);
+
 export interface UploadResumeResponse {
   id: string;
   original_filename: string;
@@ -48,13 +51,21 @@ export interface TemplatesResponse {
 
 export const resumeApi = {
   async getTemplates(): Promise<TemplatesResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/templates`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch templates');
+    try {
+      console.log('📡 Fetching templates from:', `${API_BASE_URL}/api/templates`);
+      const response = await fetch(`${API_BASE_URL}/api/templates`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch templates: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Templates loaded:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to fetch templates:', error);
+      throw error;
     }
-    
-    return response.json();
   },
 
   async uploadResume(fileUri: string, fileName: string, templateId: string = "professional"): Promise<UploadResumeResponse> {
