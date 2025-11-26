@@ -125,3 +125,70 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+// Gradient Colors
+export const Gradients = {
+  light: {
+    primary: ['#3B82F6', '#2563EB', '#1D4ED8'] as const,
+    secondary: ['#8B5CF6', '#7C3AED', '#6D28D9'] as const,
+    accent: ['#F59E0B', '#D97706', '#B45309'] as const,
+    success: ['#10B981', '#059669', '#047857'] as const,
+    background: ['#F9FAFB', '#F3F4F6', '#E5E7EB'] as const,
+    card: ['#FFFFFF', '#F9FAFB'] as const,
+  },
+  dark: {
+    primary: ['#60A5FA', '#3B82F6', '#2563EB'] as const,
+    secondary: ['#A78BFA', '#8B5CF6', '#7C3AED'] as const,
+    accent: ['#FBBF24', '#F59E0B', '#D97706'] as const,
+    success: ['#34D399', '#10B981', '#059669'] as const,
+    background: ['#111827', '#0F172A', '#0C1220'] as const,
+    card: ['#1F2937', '#111827'] as const,
+  },
+};
+
+// Shadow Presets
+export const Shadows = {
+  small: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  medium: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  large: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  colored: {
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+};
+
+// Animation Durations (in milliseconds)
+export const Animations = {
+  fast: 150,
+  normal: 250,
+  slow: 350,
+  verySlow: 500,
+};
+
+// Glassmorphism
+export const Glassmorphism = {
+  blur: 10,
+  opacity: 0.8,
+  borderOpacity: 0.2,
+};

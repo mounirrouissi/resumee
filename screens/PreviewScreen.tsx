@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Alert, Share, Platform } from "react-native";
+import { View, StyleSheet, Pressable, Alert, Share, Platform, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { LinearGradient } from "expo-linear-gradient";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Card } from "@/components/Card";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { Spacing, BorderRadius, Typography, Gradients, Shadows } from "@/constants/theme";
 import { useResumes } from "@/contexts/ResumeContext";
 import { resumeApi } from "@/services/resumeApi";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
@@ -19,13 +20,14 @@ type PreviewRouteProp = RouteProp<HomeStackParamList, "Preview">;
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Preview">;
 
 export default function PreviewScreen() {
-  const { theme } = useTheme();
+  const { theme, colorScheme } = useTheme();
   const route = useRoute<PreviewRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { getResumeById } = useResumes();
   const insets = useSafeAreaInsets();
   const [showComparison, setShowComparison] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const resume = getResumeById(route.params.resumeId);
 
@@ -42,10 +44,13 @@ export default function PreviewScreen() {
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
+      setDownloadSuccess(false);
       const downloadUrl = resumeApi.getDownloadUrl(resume.id);
 
       if (Platform.OS === 'web') {
         window.open(downloadUrl, '_blank');
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 2000);
         return;
       }
 
@@ -67,6 +72,9 @@ export default function PreviewScreen() {
         throw new Error('Download failed');
       }
 
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 2000);
+
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(result.uri, {
           mimeType: 'application/pdf',
@@ -78,6 +86,7 @@ export default function PreviewScreen() {
     } catch (error) {
       Alert.alert('Error', 'Failed to download PDF');
       console.error(error);
+      setDownloadSuccess(false);
     } finally {
       setIsDownloading(false);
     }
@@ -177,13 +186,43 @@ export default function PreviewScreen() {
         ]}
       >
         <Pressable
-          style={[styles.downloadButton, { backgroundColor: theme.primary }]}
+          style={({ pressed }) => [
+            styles.downloadButton,
+            Shadows.large,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          ]}
           onPress={handleDownload}
+          disabled={isDownloading}
         >
-          <Feather name="download" size={20} color={theme.buttonText} />
-          <ThemedText style={[Typography.button, { color: theme.buttonText, marginLeft: Spacing.sm }]}>
-            Download PDF
-          </ThemedText>
+          <LinearGradient
+            colors={colorScheme === 'dark' ? Gradients.dark.primary : Gradients.light.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientButton}
+          >
+            {isDownloading ? (
+              <>
+                <ActivityIndicator size="small" color={theme.buttonText} />
+                <ThemedText style={[Typography.button, { color: theme.buttonText, marginLeft: Spacing.sm }]}>
+                  Downloading...
+                </ThemedText>
+              </>
+            ) : downloadSuccess ? (
+              <>
+                <Feather name="check-circle" size={20} color={theme.buttonText} />
+                <ThemedText style={[Typography.button, { color: theme.buttonText, marginLeft: Spacing.sm }]}>
+                  Downloaded!
+                </ThemedText>
+              </>
+            ) : (
+              <>
+                <Feather name="download" size={20} color={theme.buttonText} />
+                <ThemedText style={[Typography.button, { color: theme.buttonText, marginLeft: Spacing.sm }]}>
+                  Download PDF
+                </ThemedText>
+              </>
+            )}
+          </LinearGradient>
         </Pressable>
       </View>
     </>
@@ -231,6 +270,10 @@ const styles = StyleSheet.create({
   downloadButton: {
     height: Spacing.buttonHeight,
     borderRadius: BorderRadius.sm,
+    overflow: 'hidden',
+  },
+  gradientButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

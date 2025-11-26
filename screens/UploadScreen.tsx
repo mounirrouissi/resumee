@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, ActivityIndicator, Modal, Alert, Platform } from "react-native";
+import { View, StyleSheet, Pressable, ActivityIndicator, Modal, Alert, Platform, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as DocumentPicker from 'expo-document-picker';
+import { LinearGradient } from "expo-linear-gradient";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Card } from "@/components/Card";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { Spacing, BorderRadius, Typography, Gradients, Shadows } from "@/constants/theme";
 import { useResumes } from "@/contexts/ResumeContext";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { resumeApi, CVTemplate } from "@/services/resumeApi";
@@ -17,7 +18,7 @@ import { resumeApi, CVTemplate } from "@/services/resumeApi";
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Upload">;
 
 export default function UploadScreen() {
-  const { theme } = useTheme();
+  const { theme, colorScheme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const { addResume, updateResume, deleteResume, currentProcessingId, setCurrentProcessingId } = useResumes();
   const [selectedFile, setSelectedFile] = useState<{
@@ -27,6 +28,7 @@ export default function UploadScreen() {
   const [processingStage, setProcessingStage] = useState<string>("");
   const [templates, setTemplates] = useState<CVTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("professional");
+  const [hoveredUploadZone, setHoveredUploadZone] = useState(false);
 
   useEffect(() => {
     loadTemplates();
@@ -122,19 +124,34 @@ export default function UploadScreen() {
       <ScreenScrollView>
         <View style={styles.container}>
           <Pressable
-            style={[
+            style={({ pressed }) => [
               styles.uploadZone,
-              { borderColor: theme.border },
+              Shadows.small,
+              pressed && styles.uploadZonePressed,
             ]}
             onPress={pickDocument}
+            onPressIn={() => Platform.OS === 'web' && setHoveredUploadZone(true)}
+            onPressOut={() => Platform.OS === 'web' && setHoveredUploadZone(false)}
           >
-            <Feather name="upload-cloud" size={64} color={theme.textSecondary} />
-            <ThemedText style={[styles.uploadText, { color: theme.textSecondary }]}>
-              Tap to select your resume PDF
-            </ThemedText>
-            <ThemedText style={[styles.uploadHint, { color: theme.textSecondary }]}>
-              Supports PDF files only
-            </ThemedText>
+            <LinearGradient
+              colors={hoveredUploadZone
+                ? (colorScheme === 'dark' ? Gradients.dark.primary : Gradients.light.primary)
+                : [theme.border, theme.border]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientBorder}
+            >
+              <View style={[styles.uploadZoneInner, { backgroundColor: theme.backgroundDefault }]}>
+                <Feather name="upload-cloud" size={64} color={hoveredUploadZone ? theme.primary : theme.textSecondary} />
+                <ThemedText style={[styles.uploadText, { color: theme.textSecondary }]}>
+                  Tap to select your resume PDF
+                </ThemedText>
+                <ThemedText style={[styles.uploadHint, { color: theme.textSecondary }]}>
+                  Supports PDF files only
+                </ThemedText>
+              </View>
+            </LinearGradient>
           </Pressable>
 
           {selectedFile ? (
@@ -158,7 +175,7 @@ export default function UploadScreen() {
                       key={template.id}
                       style={[
                         styles.templateCard,
-                        { 
+                        {
                           borderColor: selectedTemplate === template.id ? theme.primary : theme.border,
                           backgroundColor: selectedTemplate === template.id ? theme.primary + '10' : 'transparent'
                         },
@@ -167,13 +184,13 @@ export default function UploadScreen() {
                     >
                       <View style={styles.templateContent}>
                         <View style={styles.templateHeader}>
-                          <Feather 
-                            name="layout" 
-                            size={20} 
-                            color={selectedTemplate === template.id ? theme.primary : theme.textSecondary} 
+                          <Feather
+                            name="layout"
+                            size={20}
+                            color={selectedTemplate === template.id ? theme.primary : theme.textSecondary}
                           />
                           <ThemedText style={[
-                            Typography.body, 
+                            Typography.body,
                             styles.templateName,
                             { color: selectedTemplate === template.id ? theme.primary : theme.text }
                           ]}>
@@ -193,12 +210,23 @@ export default function UploadScreen() {
               </View>
 
               <Pressable
-                style={[styles.processButton, { backgroundColor: theme.primary }]}
+                style={({ pressed }) => [
+                  styles.processButton,
+                  Shadows.large,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                ]}
                 onPress={processResume}
               >
-                <ThemedText style={[Typography.button, { color: theme.buttonText }]}>
-                  Process Resume
-                </ThemedText>
+                <LinearGradient
+                  colors={colorScheme === 'dark' ? Gradients.dark.primary : Gradients.light.primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientButton}
+                >
+                  <ThemedText style={[Typography.button, { color: theme.buttonText }]}>
+                    Process Resume
+                  </ThemedText>
+                </LinearGradient>
               </Pressable>
             </Card>
           ) : null}
@@ -270,14 +298,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   uploadZone: {
-    borderWidth: 2,
-    borderStyle: "dashed",
     borderRadius: BorderRadius.md,
+    padding: 4,
+    marginBottom: Spacing.xl,
+  },
+  gradientBorder: {
+    borderRadius: BorderRadius.md,
+    padding: 2,
+  },
+  uploadZoneInner: {
+    borderRadius: BorderRadius.md - 2,
     padding: Spacing["3xl"],
     alignItems: "center",
     justifyContent: "center",
     minHeight: 200,
-    marginBottom: Spacing.xl,
+  },
+  uploadZonePressed: {
+    opacity: 0.8,
   },
   uploadText: {
     ...Typography.body,
@@ -302,6 +339,10 @@ const styles = StyleSheet.create({
   processButton: {
     height: Spacing.buttonHeight,
     borderRadius: BorderRadius.sm,
+    overflow: 'hidden',
+  },
+  gradientButton: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },

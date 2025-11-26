@@ -1,20 +1,28 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, Image, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, View, Pressable, Image, ActivityIndicator, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { Spacing, BorderRadius, Typography, Gradients, Shadows, Animations } from "@/constants/theme";
 import { useUser } from "@/contexts/UserContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
-  const { theme } = useTheme();
+  const { theme, colorScheme } = useTheme();
   const { signInWithGoogle, continueAsGuest } = useUser();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Animation refs
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim1 = useRef(new Animated.Value(0)).current;
+  const floatAnim2 = useRef(new Animated.Value(0)).current;
 
   // Check if Google OAuth is configured
   const hasGoogleConfig = !!(
@@ -29,6 +37,63 @@ export default function LoginScreen() {
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   });
 
+  // Start animations on mount
+  useEffect(() => {
+    // Fade in animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: Animations.slow,
+      useNativeDriver: true,
+    }).start();
+
+    // Pulse animation for icon
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Floating animations for background shapes
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim1, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim1, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim2, {
+          toValue: 1,
+          duration: 4000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim2, {
+          toValue: 0,
+          duration: 4000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
   React.useEffect(() => {
     if (response?.type === "success") {
       const { authentication } = response;
@@ -38,7 +103,7 @@ export default function LoginScreen() {
 
   const fetchUserInfo = async (token: string | undefined) => {
     if (!token) return;
-    
+
     setIsLoading(true);
     try {
       const userInfoResponse = await fetch(
@@ -48,7 +113,7 @@ export default function LoginScreen() {
         }
       );
       const userInfo = await userInfoResponse.json();
-      
+
       signInWithGoogle({
         id: userInfo.id,
         email: userInfo.email,
@@ -68,13 +133,13 @@ export default function LoginScreen() {
       handleGuestContinue();
       return;
     }
-    
+
     if (!request) {
       console.error("Google OAuth request failed. Please check configuration.");
       handleGuestContinue();
       return;
     }
-    
+
     setIsLoading(true);
     try {
       await promptAsync();
@@ -91,13 +156,73 @@ export default function LoginScreen() {
     continueAsGuest();
   };
 
+  const gradientColors = colorScheme === 'dark'
+    ? Gradients.dark.background
+    : Gradients.light.background;
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <View style={styles.content}>
+    <View style={styles.container}>
+      {/* Gradient Background */}
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Floating Shapes */}
+      <Animated.View
+        style={[
+          styles.floatingShape1,
+          {
+            opacity: 0.1,
+            transform: [
+              {
+                translateY: floatAnim1.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 30],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <View style={[styles.circle, { backgroundColor: theme.primary }]} />
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          styles.floatingShape2,
+          {
+            opacity: 0.08,
+            transform: [
+              {
+                translateY: floatAnim2.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -40],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <View style={[styles.circle, { backgroundColor: theme.primary }]} />
+      </Animated.View>
+
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.logoContainer}>
-          <View style={[styles.iconCircle, { backgroundColor: theme.primary }]}>
+          <Animated.View
+            style={[
+              styles.iconCircle,
+              {
+                backgroundColor: theme.primary,
+                transform: [{ scale: pulseAnim }],
+              },
+              Shadows.large
+            ]}
+          >
             <Feather name="file-text" size={48} color={theme.buttonText} />
-          </View>
+          </Animated.View>
           <ThemedText style={[Typography.h1, styles.title]}>
             Resume Improver
           </ThemedText>
@@ -111,49 +236,75 @@ export default function LoginScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.googleButton,
-                { 
+                {
                   backgroundColor: theme.backgroundSecondary,
                   borderColor: theme.border,
-                  opacity: pressed ? 0.7 : 1 
                 },
+                Shadows.medium,
+                pressed && styles.pressed,
               ]}
               onPress={handleGoogleSignIn}
               disabled={!request || isLoading}
             >
-              {isLoading ? (
-                <ActivityIndicator size="small" color={theme.primary} />
-              ) : (
-                <>
-                  <Image
-                    source={require("@/assets/images/google-icon.png")}
-                    style={styles.googleIcon}
-                  />
-                  <ThemedText style={[Typography.body, styles.buttonText]}>
-                    Continue with Google
-                  </ThemedText>
-                </>
-              )}
+              <BlurView
+                intensity={20}
+                tint={colorScheme === 'dark' ? 'dark' : 'light'}
+                style={styles.blurContainer}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color={theme.primary} />
+                ) : (
+                  <>
+                    <Image
+                      source={require("@/assets/images/google-icon.png")}
+                      style={styles.googleIcon}
+                    />
+                    <ThemedText style={[Typography.body, styles.buttonText]}>
+                      Continue with Google
+                    </ThemedText>
+                  </>
+                )}
+              </BlurView>
             </Pressable>
           )}
 
           <Pressable
             style={({ pressed }) => [
               hasGoogleConfig ? styles.guestButton : styles.primaryButton,
-              hasGoogleConfig ? {} : { backgroundColor: theme.primary },
-              { opacity: pressed ? 0.7 : 1 },
+              hasGoogleConfig ? {} : [
+                { backgroundColor: 'transparent', overflow: 'hidden' },
+                Shadows.large
+              ],
+              pressed && styles.pressed,
             ]}
             onPress={handleGuestContinue}
             disabled={isLoading}
           >
-            <ThemedText style={[
-              hasGoogleConfig ? Typography.caption : Typography.body,
-              hasGoogleConfig ? { color: theme.textSecondary } : { color: theme.buttonText, fontWeight: '600' }
-            ]}>
-              {hasGoogleConfig ? 'Continue as guest' : 'Get Started'}
-            </ThemedText>
+            {hasGoogleConfig ? (
+              <ThemedText style={[
+                Typography.caption,
+                { color: theme.textSecondary }
+              ]}>
+                Continue as guest
+              </ThemedText>
+            ) : (
+              <LinearGradient
+                colors={colorScheme === 'dark' ? Gradients.dark.primary : Gradients.light.primary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientButton}
+              >
+                <ThemedText style={[
+                  Typography.body,
+                  { color: theme.buttonText, fontWeight: '600' }
+                ]}>
+                  Get Started
+                </ThemedText>
+              </LinearGradient>
+            )}
           </Pressable>
         </View>
-      </View>
+      </Animated.View>
 
       <View style={styles.footer}>
         <ThemedText style={[Typography.caption, { color: theme.textSecondary }]}>
@@ -197,12 +348,16 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     height: 56,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
+    overflow: 'hidden',
+  },
+  blurContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: Spacing.xl,
     gap: Spacing.md,
   },
@@ -218,15 +373,39 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   primaryButton: {
-    alignItems: "center",
-    justifyContent: "center",
     height: 56,
     borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+  },
+  gradientButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: Spacing.xl,
+  },
+  pressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.98 }],
   },
   footer: {
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.xl,
     alignItems: "center",
   },
+  floatingShape1: {
+    position: 'absolute',
+    top: 100,
+    right: 30,
+  },
+  floatingShape2: {
+    position: 'absolute',
+    bottom: 150,
+    left: 40,
+  },
+  circle: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+  },
 });
+
