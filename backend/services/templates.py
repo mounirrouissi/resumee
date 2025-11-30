@@ -38,10 +38,20 @@ class ProfessionalTemplate(CVTemplate):
         self.id = "professional"
         self.name = "Harvard CV Format"
         self.description = "Traditional Harvard-style CV with centered header, perfect for academic and professional roles"
-        self.preview_image = "professional_preview.png"
+        self.preview_image = "/static/previews/harvard_preview.png"
     
     def get_styles(self) -> Dict[str, ParagraphStyle]:
-        """Professional template styles - Harvard CV Format."""
+        """Professional template styles - Harvard CV Format.
+        
+        SPECIFICATION:
+        - Page: A4 (210×297mm) or US Letter (8.5×11in)
+        - Margins: 20-25mm (0.8-1.0in) all around
+        - Name: 20-22pt bold, centered, serif (Georgia/Garamond)
+        - Contact: Single line, 9-11pt, centered, with • separators
+        - Section headers: 11-13pt bold, ALL CAPS, 0.5-1px rule below
+        - Body: 10-11pt, line spacing 1.08-1.2
+        - Space before/after headers: 6-8pt
+        """
         from reportlab.lib.styles import getSampleStyleSheet
         
         base_styles = getSampleStyleSheet()
@@ -50,19 +60,19 @@ class ProfessionalTemplate(CVTemplate):
             'name': ParagraphStyle(
                 'HarvardName',
                 parent=base_styles['Normal'],
-                fontName='Times-Bold',
-                fontSize=16,
-                textColor=colors.HexColor('#000000'),
-                spaceAfter=2,
+                fontName='Times-Bold',  # Serif font (Times ≈ Garamond/Georgia)
+                fontSize=21,  # 20-22pt
+                textColor=colors.black,
+                spaceAfter=3,  # Minimal space before contact line
                 alignment=TA_CENTER,
-                leading=18
+                leading=25  # 1.2 × fontSize
             ),
             'job_title': ParagraphStyle(
                 'HarvardJobTitle',
                 parent=base_styles['Normal'],
                 fontName='Times-Roman',
-                fontSize=11,
-                textColor=colors.HexColor('#000000'),
+                fontSize=10,
+                textColor=colors.black,
                 spaceAfter=2,
                 alignment=TA_CENTER
             ),
@@ -70,50 +80,51 @@ class ProfessionalTemplate(CVTemplate):
                 'HarvardContact',
                 parent=base_styles['Normal'],
                 fontName='Times-Roman',
-                fontSize=10,
-                textColor=colors.HexColor('#000000'),
-                spaceAfter=12,
-                alignment=TA_CENTER
+                fontSize=10,  # 9-11pt
+                textColor=colors.black,
+                spaceAfter=14,  # Space before first section
+                alignment=TA_CENTER,
+                leading=11  # 1.1 × fontSize
             ),
             'section_heading': ParagraphStyle(
                 'HarvardHeading',
                 parent=base_styles['Normal'],
                 fontName='Times-Bold',
-                fontSize=11,
-                textColor=colors.HexColor('#000000'),
-                spaceAfter=4,
-                spaceBefore=10,
+                fontSize=12,  # 11-13pt
+                textColor=colors.black,
+                spaceAfter=4,  # 6-8pt below (reduced due to HR line)
+                spaceBefore=8,  # 6-8pt above
                 alignment=TA_LEFT,
-                leading=13
+                leading=14  # 1.17 × fontSize
             ),
             'body': ParagraphStyle(
                 'HarvardBody',
                 parent=base_styles['Normal'],
                 fontName='Times-Roman',
-                fontSize=10,
-                textColor=colors.HexColor('#000000'),
+                fontSize=10.5,  # 10-11pt
+                textColor=colors.black,
                 alignment=TA_LEFT,
-                spaceAfter=4,
-                leading=12
+                spaceAfter=3,
+                leading=12  # 1.14 × fontSize (1.08-1.2 range)
             ),
             'bullet': ParagraphStyle(
                 'HarvardBullet',
                 parent=base_styles['Normal'],
                 fontName='Times-Roman',
-                fontSize=10,
-                textColor=colors.HexColor('#000000'),
+                fontSize=10.5,  # 10-11pt
+                textColor=colors.black,
                 alignment=TA_LEFT,
-                spaceAfter=3,
-                leftIndent=20,
-                bulletIndent=10,
-                leading=12
+                spaceAfter=2,
+                leftIndent=15,  # Simple round bullet indentation
+                bulletIndent=5,
+                leading=12  # 1.14 × fontSize
             ),
             'divider': ParagraphStyle(
                 'HarvardDivider',
                 parent=base_styles['Normal'],
                 fontName='Times-Roman',
-                fontSize=10,
-                textColor=colors.HexColor('#000000'),
+                fontSize=1,
+                textColor=colors.black,
                 spaceAfter=4,
                 spaceBefore=2,
                 alignment=TA_LEFT
@@ -128,55 +139,40 @@ IMPORTANT: The text you receive has been extracted from a PDF via OCR and has LO
 
 YOUR DUAL MISSION:
 1. ANALYZE and RECONSTRUCT the document's logical structure from unformatted OCR text
-2. IMPROVE the content to Harvard CV professional standards
+2. IMPROVE the content to professional resume standards with MEASURABLE OUTCOMES
 
-OCR TEXT STRUCTURE RECOGNITION:
+CORE RESUME PRINCIPLES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A resume's job is to GET AN INTERVIEW by presenting:
+- WHO you are (professional identity)
+- WHAT you've done (relevant experiences with quantifiable results)
+- WHAT you can bring (skills and value proposition)
+
+KEY WRITING RULES (APPLY TO EVERY JOB):
+1. **Be concise**: 1 page for ≤10 years experience; 2 pages for senior roles
+2. **Action + Outcome**: Start bullets with strong verbs (Led, Designed, Improved) + concrete results
+3. **Quantify everything**: Add numbers (revenue, %, time saved, team size, users impacted)
+4. **Tense**: Present tense for CURRENT role, past tense for PREVIOUS roles
+5. **No pronouns**: Never use "I," "me," or "my" - keep statements direct
+6. **Tailor content**: Adjust to match job requirements
+7. **Honest and factual**: Only state what actually happened - no exaggeration
+
+CRITICAL HARVARD CV SPECIFICATIONS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-STEP 1 - IDENTIFY DOCUMENT ELEMENTS IN OCR TEXT:
+HEADER FORMAT (TOP OF PAGE):
+- Name: Centered, bold, one line
+- Contact: SINGLE LINE directly below name, centered, with bullet (•) separators
+  Format: City, Country • Phone • Email • LinkedIn/Portfolio
+  Example: Tunis, Tunisia • +216 XX XXX XXX • name@email.com • linkedin.com/in/username
 
-A. NAME/TITLE (Usually first significant text)
-   - Person's name at top
-   - Often in larger text or all caps
-   - May be fragmented by OCR
+❌ DO NOT use multiple lines for contact (WRONG):
+Street Address
+City, State ZIP
+Phone: XXX | Email: XXX
 
-B. CONTACT INFORMATION
-   - Email addresses (contains @)
-   - Phone numbers (xxx-xxx-xxxx, (xxx) xxx-xxxx patterns)
-   - Addresses, LinkedIn URLs
-   - Usually near top or bottom
-
-C. SECTION HEADERS
-   - Short phrases: EXPERIENCE, EDUCATION, SKILLS, SUMMARY
-   - Often all caps or standalone lines
-   - Repeated pattern throughout
-
-D. JOB TITLES & COMPANIES
-   - Under experience sections
-   - Often paired with dates
-   - Company names may include location
-
-E. DATES
-   - Patterns: 2020-2023, Jan 2020 - Present
-   - Month/Year combinations
-   - Near job/education entries
-
-F. BULLET POINTS/ACHIEVEMENTS
-   - Multiple lines describing similar things
-   - Start with action verbs
-   - Lists under jobs/sections
-
-G. EDUCATION DETAILS
-   - Degree names, universities
-   - GPA, coursework, honors
-   - Graduation dates
-
-STEP 2 - RECONSTRUCT LOGICAL STRUCTURE:
-1. Read through ENTIRE OCR text first
-2. Identify document sections despite formatting loss
-3. Recognize hierarchical relationships
-4. Group related information together
-5. Identify what belongs to each job/education entry
+✅ USE single line (CORRECT):
+City, Country • Phone • Email • LinkedIn
 
 CRITICAL PRESERVATION RULES:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -193,44 +189,31 @@ MUST NOT:
 - Change facts or dates
 - Add fictional achievements
 
-HARVARD CV FORMAT REQUIREMENTS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-FORMATTING RULES:
-1. Use ONLY standard fonts: Times New Roman, Garamond, or similar serif fonts
-2. Clean, traditional layout with clear section headings
-3. Reverse-chronological order (most recent first)
-4. NO photos, graphics, tables, or fancy formatting
-5. Use consistent spacing and alignment
-6. Professional, academic tone
-
 HARVARD CV STRUCTURE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 YOUR FULL NAME
-Street Address, City, State ZIP Code
-Phone: (XXX) XXX-XXXX | Email: your.email@example.com | LinkedIn: linkedin.com/in/yourprofile
+City, Country • +XXX XX XXX XXXX • your.email@example.com • linkedin.com/in/yourprofile
 
 EDUCATION
 ─────────────────────────────────────────────────────────────
-University Name, Location
+Institution Name, City, Country
 Degree, Major (GPA: X.XX/4.00)                                                    Month Year - Month Year
 • Relevant coursework: Course 1, Course 2, Course 3
 • Honors/Awards: Dean's List, Scholarship Name
 • Activities: Club Name, Organization Name
 
-Previous Institution, Location
+Previous Institution, City, Country
 Degree/Certificate                                                                 Month Year - Month Year
 
 EXPERIENCE
 ─────────────────────────────────────────────────────────────
-Job Title, Company Name, Location                                                  Month Year - Month Year
+Job Title, Company Name, City, Country                                             Month Year - Month Year
 • Action verb describing responsibility or achievement with quantifiable results
 • Action verb describing responsibility or achievement with quantifiable results
-• Action verb describing responsibility or achievement with quantifiable results
-• Focus on impact, metrics, and outcomes
+• Focus on impact, metrics, and outcomes (increased X by Y%, managed team of Z)
 
-Previous Job Title, Company Name, Location                                         Month Year - Month Year
+Previous Job Title, Company Name, City, Country                                    Month Year - Month Year
 • Achievement with specific metrics and results
 • Achievement with specific metrics and results
 
@@ -242,70 +225,69 @@ Certifications: Certification Name (Year), Certification Name (Year)
 
 ADDITIONAL SECTIONS (if applicable):
 ─────────────────────────────────────────────────────────────
-LEADERSHIP & ACTIVITIES
-Organization Name, Role                                                            Month Year - Month Year
-• Description of leadership role and impact
-
-PUBLICATIONS & RESEARCH (if applicable)
-• Author(s). "Title of Publication." Journal/Conference Name, Year.
-
-AWARDS & HONORS (if applicable)
-• Award Name, Issuing Organization, Year
+PROJECTS / LEADERSHIP / PUBLICATIONS / AWARDS
 
 HARVARD CV BEST PRACTICES:
-1. Name should be prominent at the top (14-16pt)
-2. Contact information directly below name (10-11pt)
+1. Name: Centered, 20-22pt bold
+2. Contact: SINGLE LINE centered with • separators (9-11pt)
 3. Education comes FIRST (especially for recent graduates)
-4. Use consistent date alignment (right-aligned)
-5. Section headings MUST be in ALL CAPS AND BOLD (e.g., EDUCATION, EXPERIENCE, SKILLS)
-6. Use simple horizontal lines (─) as section dividers
-7. Bullet points MUST be properly aligned with consistent indentation
-8. Each bullet point should start with • character
-9. Bullet text should be aligned and not overlap with the bullet character
-10. Quantify achievements with numbers, percentages, dollar amounts
-11. Strong action verbs: Led, Developed, Managed, Achieved, Increased, etc.
-12. Keep to 1 page for early career, 2 pages maximum for experienced professionals
+4. Use reverse chronological order (most recent first)
+5. Section headings: BOLD, ALL CAPS (e.g., EDUCATION, EXPERIENCE, SKILLS)
+6. Horizontal lines (─) under each section header
+7. Bullet points: simple • character, consistent indentation
+8. Quantify achievements (numbers, percentages, dollar amounts)
+9. Strong action verbs: Led, Developed, Managed, Achieved, Increased
+10. Length: 1 page for ≤10 years experience; 2 pages for senior roles
+
+WRITING STRONG BULLET POINTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FORMULA: [Action Verb] + [What you did] + [Measurable outcome/impact]
+
+STRONG ACTION VERBS BY CATEGORY:
+• Leadership: Led, Directed, Managed, Coordinated, Supervised, Mentored
+• Achievement: Achieved, Exceeded, Delivered, Accomplished, Attained
+• Improvement: Optimized, Enhanced, Improved, Streamlined, Increased, Reduced
+• Creation: Developed, Designed, Built, Created, Launched, Established
+• Analysis: Analyzed, Assessed, Evaluated, Researched, Investigated
+• Communication: Presented, Communicated, Collaborated, Negotiated
+
+❌ WEAK (vague, no outcome):
+• Responsible for managing social media accounts
+• Helped with customer service
+• Worked on website redesign project
+
+✅ STRONG (action verb + specific outcome):
+• Increased social media engagement by 150% over 6 months, growing followers from 2,000 to 5,000
+• Resolved 95% of customer inquiries within 24 hours, maintaining 4.8/5.0 satisfaction rating
+• Led website redesign project, improving page load time by 40% and increasing conversions by 25%
+
+QUANTIFICATION EXAMPLES:
+• Revenue/Budget: "Managed $2M budget" / "Increased revenue by $500K"
+• Percentages: "Reduced costs by 30%" / "Improved efficiency by 45%"
+• Time: "Delivered project 2 months ahead of schedule" / "Reduced processing time from 5 days to 2 days"
+• Scale: "Served 10,000+ users" / "Managed team of 8 developers"
+• Volume: "Processed 500+ applications monthly" / "Generated 50+ qualified leads per quarter"
 
 CRITICAL FORMATTING RULES:
-• Section titles (EDUCATION, EXPERIENCE, SKILLS, etc.) MUST be in BOLD and ALL CAPS
+• Section titles (EDUCATION, EXPERIENCE, SKILLS) MUST be BOLD and ALL CAPS
+• Contact MUST be on ONE LINE with • separators (not multiple lines!)
 • Bullet points MUST have proper spacing and alignment
-• Use consistent indentation throughout (typically 0.25-0.5 inch from left margin)
-• Bullet character (•) should be followed by a space before text
-• All bullets under the same section should align perfectly
-• No overlapping text or misaligned bullets
-
-CONTENT GUIDELINES:
-• Be specific and quantifiable (increased sales by 25%, managed team of 10)
-• Focus on achievements, not just responsibilities
-• Use past tense for previous roles, present tense for current role
-• Tailor content to target position
-• Remove personal pronouns (I, me, my)
-• Avoid abbreviations without context
-• Use consistent formatting throughout
-
-OCR TEXT CLEANUP:
-• Fix spelling and grammar errors from OCR
-• Remove OCR artifacts (repeated characters, garbled text)
-• Reconstruct words split across lines
-• Correct spacing issues
-• Fix date formatting inconsistencies
-• Merge fragmented contact information
-
-DATE FORMAT:
-• Use: January 2023 - Present OR Jan 2023 - Present
-• Use: September 2020 - May 2024
-• Be consistent throughout the document
+• Bullet character (•) followed by space before text
+• All bullets under same section should align perfectly
 
 WHAT TO AVOID:
-❌ Objective statements (outdated)
+❌ OBJECTIVE statements (completely outdated - remove them entirely!)
+❌ Personal pronouns (I, me, my)
 ❌ Photos or headshots
-❌ Graphics, charts, or icons
+❌ Graphics, charts, icons
 ❌ Multiple columns
 ❌ Fancy fonts or colors
 ❌ Weak verbs (helped, worked on, responsible for)
 ❌ Vague statements without metrics
 ❌ Personal information (age, marital status, etc.)
 ❌ References (provide separately when requested)
+❌ Multi-line contact information (MUST be single line!)
 
 OUTPUT FORMAT WITH FORMATTING MARKERS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -313,7 +295,7 @@ OUTPUT FORMAT WITH FORMATTING MARKERS:
 Use these EXACT markers to indicate structure:
 
 [TITLE: text] - Main name/title (will be centered, large, bold)
-[CONTACT: item] - Each contact piece (will be centered)
+[CONTACT: item] - SINGLE LINE with all contact info separated by •
 [SECTION: header] - Major sections like EDUCATION, EXPERIENCE, SKILLS (will be BOLD, ALL CAPS, with underline)
 [SUBSECTION: text] - Job titles, company names, degrees (will be bold)
 [DATE: date] - All dates (format: Month YYYY - Month YYYY)
@@ -322,23 +304,28 @@ Use these EXACT markers to indicate structure:
 [PARAGRAPH] followed by text - Paragraph content
 [SPACING] - Vertical space between sections
 
-CRITICAL: 
-- ALL section headers (EDUCATION, EXPERIENCE, SKILLS, etc.) MUST use [SECTION: ] marker
-- ALL bullet points MUST use [BULLET: ] marker for proper alignment
-- Section names MUST be in ALL CAPS (e.g., [SECTION: EDUCATION] not [SECTION: Education])
+CRITICAL EXAMPLES:
 
-EXAMPLE OUTPUT (showing proper formatting):
+✅ CORRECT CONTACT FORMAT (single line):
+[TITLE: JOHN SMITH]
+[CONTACT: Boston, MA • (555) 123-4567 • john.smith@email.com • linkedin.com/in/johnsmith]
+[SPACING]
+
+❌ WRONG CONTACT FORMAT (multiple lines - DO NOT USE):
 [TITLE: JOHN SMITH]
 [CONTACT: 123 Main Street, Boston, MA 02101]
 [CONTACT: Phone: (555) 123-4567]
 [CONTACT: Email: john.smith@email.com]
-[CONTACT: LinkedIn: linkedin.com/in/johnsmith]
+
+FULL EXAMPLE OUTPUT:
+[TITLE: JOHN SMITH]
+[CONTACT: Boston, MA • (555) 123-4567 • john.smith@email.com • linkedin.com/in/johnsmith]
 [SPACING]
 [SECTION: EDUCATION]
 [SUBSECTION: Massachusetts Institute of Technology, Cambridge, MA]
 [SUBSECTION: Bachelor of Science in Computer Science (GPA: 3.8/4.0)]
 [DATE: September 2016 - May 2020]
-[BULLET: Relevant coursework: Data Structures, Algorithms, Machine Learning]
+[BULLET: Relevant coursework: Data Structures, Algorithms, Machine Learning, Artificial Intelligence]
 [BULLET: Dean's List: Fall 2018, Spring 2019, Fall 2019]
 [BULLET: Activities: Computer Science Club President, Hackathon Organizer]
 [SPACING]
@@ -346,18 +333,22 @@ EXAMPLE OUTPUT (showing proper formatting):
 [SUBSECTION: Software Engineer, Tech Company Inc., Boston, MA]
 [DATE: June 2020 - Present]
 [BULLET: Developed and deployed 5 full-stack web applications using React and Node.js, serving 10,000+ users]
-[BULLET: Optimized database queries reducing load time by 40% and improving user experience]
-[BULLET: Led cross-functional team of 8 developers to deliver project 2 months ahead of schedule]
+[BULLET: Optimized database queries reducing load time by 40% and improving user experience significantly]
+[BULLET: Led cross-functional team of 8 developers to deliver major project 2 months ahead of schedule]
 [SPACING]
 [SECTION: SKILLS]
 [PARAGRAPH]
-[BOLD: Technical:] JavaScript, Python, React, Node.js, PostgreSQL, Docker, AWS
+[BOLD: Technical:] JavaScript, Python, React, Node.js, PostgreSQL, Docker, AWS, Git
 [BOLD: Languages:] English (Native), Spanish (Conversational)
+[BOLD: Certifications:] AWS Certified Developer (2022), Google Cloud Professional (2021)
 
-NOTE: In the final PDF:
-- "EDUCATION", "EXPERIENCE", "SKILLS" will appear in BOLD ALL CAPS with underline
-- All bullet points will be properly aligned with consistent indentation
-- Each bullet will have the • character followed by proper spacing
+FINAL REMINDERS:
+- Contact info MUST be ONE LINE with • separators
+- NO OBJECTIVE section (remove completely)
+- Section headers in ALL CAPS and BOLD
+- Use [SECTION: ] marker for headers
+- Use [BULLET: ] marker for all bullet points
+- Quantify everything with numbers
 
 Return ONLY the improved CV using these formatting markers."""
 

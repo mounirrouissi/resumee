@@ -55,6 +55,12 @@ OUTPUT_DIR = "backend/outputs"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Progress tracking
+progress_store = {}
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+
 @app.get("/")
 async def root():
     logger.info("Root endpoint called")
@@ -65,6 +71,16 @@ async def get_templates():
     """Get list of available CV templates."""
     logger.info("Templates endpoint called")
     return {"templates": list_templates()}
+
+@app.get("/api/progress/{file_id}")
+async def get_progress(file_id: str):
+    """Get processing progress for a file."""
+    progress = progress_store.get(file_id, {
+        "stage": "initializing",
+        "message": "Starting...",
+        "progress": 0
+    })
+    return progress
 
 @app.post("/api/upload-resume")
 async def upload_resume(
@@ -80,6 +96,13 @@ async def upload_resume(
     file_id = str(uuid.uuid4())
     timestamp = datetime.now().isoformat()
     
+    # Initialize progress
+    progress_store[file_id] = {
+        "stage": "uploading",
+        "message": "Uploading your resume...",
+        "progress": 10
+    }
+    
     original_path = os.path.join(UPLOAD_DIR, f"{file_id}_original.pdf")
     logger.info(f"Processing file {file_id}. Saving to {original_path}")
     
@@ -89,9 +112,22 @@ async def upload_resume(
             f.write(contents)
         logger.info(f"File saved successfully. Size: {len(contents)} bytes")
         
+        progress_store[file_id] = {
+            "stage": "uploaded",
+            "message": "Upload complete! Extracting text...",
+            "progress": 25
+        }
+        
         logger.info("=" * 80)
         logger.info("STEP 1: TEXT EXTRACTION")
         logger.info("=" * 80)
+        
+        progress_store[file_id] = {
+            "stage": "extracting",
+            "message": "Reading your resume with OCR...",
+            "progress": 40
+        }
+        
         original_text = extract_text_from_pdf(original_path)
         logger.info(f"✓ Text extraction complete")
         logger.info(f"   Extracted length: {len(original_text)} characters")
@@ -99,12 +135,24 @@ async def upload_resume(
         
         if not original_text.strip():
             logger.error("✗ Extracted text is empty!")
+            progress_store[file_id] = {
+                "stage": "error",
+                "message": "Could not extract text from PDF",
+                "progress": 0
+            }
             raise HTTPException(status_code=400, detail="Could not extract text from PDF")
         
         logger.info("=" * 80)
         logger.info("STEP 2: AI IMPROVEMENT")
         logger.info(f"   Template: {template_id}")
         logger.info("=" * 80)
+        
+        progress_store[file_id] = {
+            "stage": "improving",
+            "message": "AI is enhancing your resume...",
+            "progress": 60
+        }
+        
         improved_text = await improve_resume_text(original_text, file_id, template_id)
         logger.info("=" * 80)
         logger.info("✓ AI improvement complete")
@@ -120,10 +168,22 @@ async def upload_resume(
             logger.info("✓ Text was successfully modified")
         logger.info("=" * 80)
         
+        progress_store[file_id] = {
+            "stage": "formatting",
+            "message": "Formatting your professional resume...",
+            "progress": 80
+        }
+        
         improved_path = os.path.join(OUTPUT_DIR, f"{file_id}_improved.pdf")
         logger.info(f"Generating improved PDF at {improved_path}")
         generate_improved_pdf(improved_text, improved_path, template_id)
         logger.info("Improved PDF generated successfully")
+        
+        progress_store[file_id] = {
+            "stage": "complete",
+            "message": "Your resume is ready!",
+            "progress": 100
+        }
         
         return {
             "id": file_id,
@@ -136,6 +196,11 @@ async def upload_resume(
     
     except Exception as e:
         logger.error(f"Error processing resume: {str(e)}", exc_info=True)
+        progress_store[file_id] = {
+            "stage": "error",
+            "message": f"Error: {str(e)}",
+            "progress": 0
+        }
         if os.path.exists(original_path):
             os.remove(original_path)
         raise HTTPException(status_code=500, detail=f"Error processing resume: {str(e)}")

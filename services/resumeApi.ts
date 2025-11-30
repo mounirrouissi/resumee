@@ -54,12 +54,23 @@ export const resumeApi = {
     try {
       console.log('📡 Fetching templates from:', `${API_BASE_URL}/api/templates`);
       const response = await fetch(`${API_BASE_URL}/api/templates`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch templates: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
+
+      // Prepend base URL to preview images if they are relative paths
+      if (data.templates) {
+        data.templates = data.templates.map((t: any) => ({
+          ...t,
+          preview_image: t.preview_image.startsWith('/')
+            ? `${API_BASE_URL}${t.preview_image}`
+            : t.preview_image
+        }));
+      }
+
       console.log('✅ Templates loaded:', data);
       return data;
     } catch (error) {
@@ -72,7 +83,7 @@ export const resumeApi = {
     try {
       console.log('📤 Uploading resume:', fileName);
       const formData = new FormData();
-      
+
       // For web
       if (fileUri.startsWith('blob:') || fileUri.startsWith('data:')) {
         const response = await fetch(fileUri);
@@ -86,11 +97,11 @@ export const resumeApi = {
           name: fileName,
         } as any);
       }
-      
+
       formData.append('template_id', templateId);
 
       console.log('🚀 Sending request to:', `${API_BASE_URL}/api/upload-resume`);
-      
+
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes timeout
@@ -124,7 +135,7 @@ export const resumeApi = {
 
   async downloadResume(fileId: string): Promise<Blob> {
     const response = await fetch(`${API_BASE_URL}/api/download/${fileId}`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to download resume');
     }
@@ -134,5 +145,22 @@ export const resumeApi = {
 
   getDownloadUrl(fileId: string): string {
     return `${API_BASE_URL}/api/download/${fileId}`;
+  },
+
+  getTemplatePreviewUrl(templateId: string): string {
+    return `${API_BASE_URL}/api/template-preview/${templateId}`;
+  },
+
+  async getProgress(fileId: string): Promise<{ stage: string; message: string; progress: number }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/progress/${fileId}`);
+      if (!response.ok) {
+        throw new Error('Failed to get progress');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get progress:', error);
+      return { stage: 'unknown', message: 'Processing...', progress: 0 };
+    }
   },
 };

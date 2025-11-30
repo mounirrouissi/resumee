@@ -12,6 +12,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.platypus.flowables import HRFlowable
 from reportlab.pdfgen import canvas
 
 logger = logging.getLogger(__name__)
@@ -151,14 +152,14 @@ class PDFFormatter:
         logger.info(f"Generating PDF with {len(elements)} elements...")
         logger.info(f"Output path: {output_path}")
         
-        # Create PDF document
+        # Create PDF document with Harvard CV spec margins (20-25mm = 0.83 inch = 21mm)
         doc = SimpleDocTemplate(
             output_path,
-            pagesize=letter,
-            rightMargin=0.75*inch,
-            leftMargin=0.75*inch,
-            topMargin=0.75*inch,
-            bottomMargin=0.75*inch
+            pagesize=letter,  # US Letter (8.5 × 11 in)
+            rightMargin=0.83*inch,  # 21mm
+            leftMargin=0.83*inch,
+            topMargin=0.83*inch,
+            bottomMargin=0.83*inch
         )
         
         story = []
@@ -171,7 +172,7 @@ class PDFFormatter:
             logger.debug(f"Rendering element {i+1}/{len(elements)}: {elem_type}")
             
             if elem_type == 'title':
-                # Title: Large, bold, centered
+                # Title: Large, bold, centered (NO underline)
                 para = Paragraph(content, self.template_styles['name'])
                 story.append(para)
                 story.append(Spacer(1, 0.05*inch))
@@ -182,15 +183,17 @@ class PDFFormatter:
                 story.append(para)
                 
             elif elem_type == 'section':
-                # Section header: Bold, larger, with space before
-                story.append(Spacer(1, 0.15*inch))
-                para = Paragraph(content.upper(), self.template_styles['section_heading'])
+                # Section header: Bold and underlined
+                story.append(Spacer(1, 0.12*inch))
+                # Use both underline tag AND HRFlowable for strong visual effect
+                underlined_content = f'<b><u>{content.upper()}</u></b>'
+                para = Paragraph(underlined_content, self.template_styles['section_heading'])
                 story.append(para)
-                # Add horizontal line
-                story.append(Spacer(1, 0.02*inch))
-                para_divider = Paragraph('_' * 90, self.template_styles['divider'])
-                story.append(para_divider)
-                story.append(Spacer(1, 0.08*inch))
+                # Add horizontal line below for extra emphasis
+                story.append(Spacer(1, 0.03*inch))
+                hr = HRFlowable(width="100%", thickness=1.5, color=colors.black, spaceBefore=0, spaceAfter=0)
+                story.append(hr)
+                story.append(Spacer(1, 0.1*inch))
                 
             elif elem_type == 'subsection':
                 # Subsection: Bold, medium size

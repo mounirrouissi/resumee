@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, ActivityIndicator, Modal, Alert, Platform, Animated } from "react-native";
+import { View, StyleSheet, Pressable, ActivityIndicator, Modal, Alert, Platform, Animated, Image, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -29,6 +29,9 @@ export default function UploadScreen() {
   const [templates, setTemplates] = useState<CVTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("professional");
   const [hoveredUploadZone, setHoveredUploadZone] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [progress, setProgress] = useState<number>(0);
 
   useEffect(() => {
     loadTemplates();
@@ -44,6 +47,12 @@ export default function UploadScreen() {
     } catch (error) {
       console.error('Failed to load templates:', error);
     }
+  };
+
+  const handlePreviewTemplate = (templateId: string) => {
+    const previewPdfUrl = resumeApi.getTemplatePreviewUrl(templateId);
+    setPreviewUrl(previewPdfUrl);
+    setShowPreview(true);
   };
 
   const pickDocument = async () => {
@@ -74,6 +83,8 @@ export default function UploadScreen() {
     // Create a temporary ID for the processing state
     const tempId = Date.now().toString();
     setCurrentProcessingId(tempId);
+    setProgress(0);
+    setProcessingStage("Initializing...");
 
     addResume({
       id: tempId,
@@ -85,9 +96,35 @@ export default function UploadScreen() {
     });
 
     try {
-      setProcessingStage("Uploading and processing your resume...");
+      setProgress(10);
+      setProcessingStage("Uploading your resume...");
+
+      // Simulate progress updates while waiting for response
+      const progressSteps = [
+        { delay: 500, progress: 25, message: "Upload complete! Extracting text..." },
+        { delay: 2000, progress: 40, message: "Reading your resume with OCR..." },
+        { delay: 3000, progress: 60, message: "AI is enhancing your resume..." },
+        { delay: 5000, progress: 80, message: "Formatting your professional resume..." },
+      ];
+
+      let currentStep = 0;
+      const progressInterval = setInterval(() => {
+        if (currentStep < progressSteps.length) {
+          const step = progressSteps[currentStep];
+          setProgress(step.progress);
+          setProcessingStage(step.message);
+          currentStep++;
+        }
+      }, 1500);
 
       const response = await resumeApi.uploadResume(selectedFile.uri, selectedFile.name, selectedTemplate);
+      
+      // Clear the progress interval
+      clearInterval(progressInterval);
+      
+      // Set to 100% complete
+      setProgress(100);
+      setProcessingStage("Your resume is ready!");
 
       // Delete the temporary resume and add a new one with the backend's UUID
       deleteResume(tempId);
@@ -168,44 +205,84 @@ export default function UploadScreen() {
 
               {/* Template Selection */}
               <View style={styles.templateSection}>
-                <ThemedText style={[Typography.body, styles.templateLabel]}>Choose Template</ThemedText>
-                <View style={styles.templateList}>
-                  {templates.map((template) => (
+                <View style={styles.sectionHeader}>
+                  <ThemedText style={Typography.h2}>Choose Template</ThemedText>
+                </View>
+
+                {/* Main Preview Card */}
+                {templates.length > 0 && (
+                  <View style={styles.mainPreviewContainer}>
                     <Pressable
-                      key={template.id}
-                      style={[
-                        styles.templateCard,
-                        {
-                          borderColor: selectedTemplate === template.id ? theme.primary : theme.border,
-                          backgroundColor: selectedTemplate === template.id ? theme.primary + '10' : 'transparent'
-                        },
-                      ]}
-                      onPress={() => setSelectedTemplate(template.id)}
+                      style={[styles.mainPreviewCard, { backgroundColor: theme.backgroundSecondary }]}
+                      onPress={() => handlePreviewTemplate(selectedTemplate)}
                     >
-                      <View style={styles.templateContent}>
-                        <View style={styles.templateHeader}>
-                          <Feather
-                            name="layout"
-                            size={20}
-                            color={selectedTemplate === template.id ? theme.primary : theme.textSecondary}
-                          />
-                          <ThemedText style={[
-                            Typography.body,
-                            styles.templateName,
-                            { color: selectedTemplate === template.id ? theme.primary : theme.text }
-                          ]}>
-                            {template.name}
+                      <Image
+                        source={{ uri: templates.find(t => t.id === selectedTemplate)?.preview_image || 'https://via.placeholder.com/300x400' }}
+                        style={styles.mainPreviewImage}
+                        resizeMode="contain"
+                      />
+                      <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.8)']}
+                        style={styles.previewGradient}
+                      >
+                        <View style={styles.previewContent}>
+                          <ThemedText style={[Typography.h2, { color: '#fff' }]}>
+                            {templates.find(t => t.id === selectedTemplate)?.name || 'Template Name'}
                           </ThemedText>
+                          <ThemedText style={[Typography.bodySmall, { color: '#ddd' }]}>
+                            {templates.find(t => t.id === selectedTemplate)?.description || 'Professional resume template'}
+                          </ThemedText>
+                          <View style={styles.previewAction}>
+                            <Feather name="eye" size={16} color="#fff" />
+                            <ThemedText style={[Typography.caption, { color: '#fff', marginLeft: 4 }]}>Tap to Preview</ThemedText>
+                          </View>
                         </View>
-                        <ThemedText style={[Typography.caption, { color: theme.textSecondary }]}>
-                          {template.description}
-                        </ThemedText>
-                      </View>
-                      {selectedTemplate === template.id && (
-                        <Feather name="check-circle" size={20} color={theme.primary} />
-                      )}
+                      </LinearGradient>
                     </Pressable>
-                  ))}
+                  </View>
+                )}
+
+                {/* Template Carousel */}
+                <View style={styles.carouselContainer}>
+                  <ThemedText style={[Typography.h2, styles.carouselTitle]}>All Templates</ThemedText>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.carouselContent}
+                  >
+                    {templates.map((template) => (
+                      <Pressable
+                        key={template.id}
+                        style={[
+                          styles.carouselItem,
+                          selectedTemplate === template.id && styles.carouselItemSelected,
+                          { borderColor: selectedTemplate === template.id ? theme.primary : 'transparent' }
+                        ]}
+                        onPress={() => setSelectedTemplate(template.id)}
+                      >
+                        <Image
+                          source={{ uri: template.preview_image || 'https://via.placeholder.com/100x140' }}
+                          style={styles.carouselImage}
+                          resizeMode="cover"
+                        />
+                        {selectedTemplate === template.id && (
+                          <View style={[styles.checkmarkContainer, { backgroundColor: theme.primary }]}>
+                            <Feather name="check" size={12} color="#fff" />
+                          </View>
+                        )}
+                        <ThemedText
+                          style={[
+                            Typography.caption,
+                            styles.carouselItemName,
+                            { color: selectedTemplate === template.id ? theme.primary : theme.textSecondary }
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {template.name}
+                        </ThemedText>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
                 </View>
               </View>
 
@@ -283,7 +360,26 @@ export default function UploadScreen() {
             <ThemedText style={[Typography.h2, styles.modalTitle]}>
               Processing Resume
             </ThemedText>
-            <ThemedText style={[Typography.body, { color: theme.textSecondary, textAlign: "center" }]}>
+            
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { 
+                      backgroundColor: theme.primary,
+                      width: `${progress}%`
+                    }
+                  ]} 
+                />
+              </View>
+              <ThemedText style={[Typography.caption, { color: theme.textSecondary, marginTop: Spacing.xs }]}>
+                {progress}%
+              </ThemedText>
+            </View>
+            
+            <ThemedText style={[Typography.body, { color: theme.textSecondary, textAlign: "center", marginTop: Spacing.sm }]}>
               {processingStage}
             </ThemedText>
           </ThemedView>
@@ -384,37 +480,139 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  progressContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginVertical: Spacing.md,
+  },
+  progressBar: {
+    width: '100%',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+    transition: 'width 0.3s ease',
   },
   templateSection: {
     marginBottom: Spacing.lg,
   },
-  templateLabel: {
-    marginBottom: Spacing.md,
-    fontWeight: '600',
-  },
-  templateList: {
-    gap: Spacing.sm,
-  },
-  templateCard: {
+  sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: Spacing.md,
-    borderWidth: 2,
-    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  mainPreviewContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+  },
+  mainPreviewCard: {
+    width: '100%',
+    height: 400,
+    borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#1E293B',
+  },
+  mainPreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  previewGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 140,
+    justifyContent: 'flex-end',
+    padding: Spacing.lg,
+  },
+  previewContent: {
     marginBottom: Spacing.sm,
   },
-  templateContent: {
-    flex: 1,
-  },
-  templateHeader: {
+  previewAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    marginTop: Spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  templateName: {
-    marginLeft: Spacing.sm,
+  carouselContainer: {
+    marginTop: Spacing.md,
+  },
+  carouselTitle: {
+    marginBottom: Spacing.md,
+  },
+  carouselContent: {
+    paddingRight: Spacing.lg,
+    gap: Spacing.md,
+  },
+  carouselItem: {
+    width: 100,
+    marginRight: Spacing.md,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: BorderRadius.sm,
+    padding: 4,
+  },
+  carouselItemSelected: {
+    // Border color handled in style prop
+  },
+  carouselImage: {
+    width: '100%',
+    height: 130,
+    borderRadius: BorderRadius.xs,
+    marginBottom: Spacing.xs,
+    backgroundColor: '#e2e8f0',
+  },
+  checkmarkContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  carouselItemName: {
+    textAlign: 'center',
+    marginTop: 4,
     fontWeight: '600',
+  },
+  previewModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.lg,
+  },
+  previewModalContent: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.xl,
+    width: '90%',
+    maxWidth: 800,
+    maxHeight: '90%',
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  closePreviewButton: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.sm,
+    overflow: 'hidden',
+    marginTop: Spacing.lg,
   },
 });

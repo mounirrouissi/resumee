@@ -7,7 +7,9 @@ import PyPDF2
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus.flowables import HRFlowable
 from reportlab.lib.enums import TA_LEFT
 from PIL import Image
 import logging
@@ -254,6 +256,9 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
         template = get_template(template_id)
         template_styles = template.get_styles()
         
+        # Log first part of text for debugging
+        logger.info(f"First 500 chars of AI text: {text[:500]}")
+        
         # Check if text has formatting markers
         formatter = PDFFormatter(template_styles)
         if formatter.has_formatting_markers(text):
@@ -263,13 +268,14 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
         
         # Fall back to simple rendering if no markers
         logger.info("⚠️ No formatting markers - using simple text parsing")
+        # Harvard CV spec: 20-25mm margins (0.8-1.0 inch) = 0.83 inch ≈ 21mm
         doc = SimpleDocTemplate(
             output_path,
-            pagesize=letter,
-            rightMargin=0.75*inch,
-            leftMargin=0.75*inch,
-            topMargin=0.75*inch,
-            bottomMargin=0.75*inch
+            pagesize=letter,  # US Letter (8.5 × 11 in)
+            rightMargin=0.83*inch,  # 21mm
+            leftMargin=0.83*inch,
+            topMargin=0.83*inch,
+            bottomMargin=0.83*inch
         )
         
         # Use template styles
@@ -306,10 +312,11 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
             # Detect section dividers (lines with ─ or ━ characters)
             if '─' in line_stripped or '━' in line_stripped or '═' in line_stripped:
                 # Add a simple horizontal line for Harvard format
-                story.append(Paragraph('_' * 90, divider_style))
+                hr = HRFlowable(width="100%", thickness=1, color=colors.black, spaceBefore=1, spaceAfter=1)
+                story.append(hr)
                 continue
             
-            # First line should be the name (centered, bold, larger)
+            # First line should be the name (centered, bold, larger - NO underline)
             if is_first_line and not any(char in line_stripped for char in ['━', '═', '─']):
                 story.append(Paragraph(line_stripped, name_style))
                 is_first_line = False
@@ -334,8 +341,15 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
                      'PUBLICATIONS', 'RESEARCH', 'AWARDS', 'HONORS', 'CERTIFICATIONS',
                      'PROJECTS', 'PROFESSIONAL', 'WORK', 'TECHNICAL', 'LANGUAGES',
                      'ADDITIONAL', 'VOLUNTEER', 'INTERESTS'])):
-                story.append(Spacer(1, 0.05*inch))
-                story.append(Paragraph(line_stripped, section_heading_style))
+                story.append(Spacer(1, 0.08*inch))
+                # Make it bold AND underlined with HTML tags
+                underlined_header = f'<b><u>{line_stripped}</u></b>'
+                story.append(Paragraph(underlined_header, section_heading_style))
+                # Add horizontal line below
+                story.append(Spacer(1, 0.03*inch))
+                hr = HRFlowable(width="100%", thickness=1.5, color=colors.black, spaceBefore=0, spaceAfter=0)
+                story.append(hr)
+                story.append(Spacer(1, 0.06*inch))
                 continue
             
             # Bullet points
