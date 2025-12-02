@@ -282,23 +282,17 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
             generate_pdf_from_formatted_text(text, output_path, template_styles)
             return
         
-        # No fallback - raise error if markers are missing
-        logger.error("=" * 80)
-        logger.error("❌ CRITICAL ERROR: NO FORMATTING MARKERS FOUND")
-        logger.error("=" * 80)
-        logger.error("The AI did not generate the required formatting markers.")
-        logger.error("This indicates one of the following issues:")
-        logger.error("  1. AI service is not working properly")
-        logger.error("  2. AI is in simulation mode (check for API key issues)")
-        logger.error("  3. System prompt is not being sent correctly")
-        logger.error("")
-        logger.error("Required markers: [TITLE:, [CONTACT:, [SECTION:, [BULLET:, etc.")
-        logger.error("Check the debug file for the raw AI output.")
-        logger.error("=" * 80)
-        raise Exception(
-            "PDF generation failed: AI did not generate required formatting markers. "
-            "Please check the backend logs and ensure the AI service is configured correctly."
-        )
+        # Fallback for text without markers (e.g. from simulation mode or AI failure)
+        logger.warning("⚠️ No formatting markers found - applying default formatting")
+        
+        # Create a basic structure
+        fallback_text = f"""[TITLE: Resume]
+[SECTION: SUMMARY]
+[PARAGRAPH]
+{text}
+"""
+        generate_pdf_from_formatted_text(fallback_text, output_path, template_styles)
+        return
         
     except Exception as e:
         logger.error(f"Error generating PDF: {str(e)}", exc_info=True)

@@ -129,7 +129,13 @@ async def improve_resume_text(original_text: str, file_id: str = None, template_
             generation_config={
                 "temperature": 0.7,
                 "max_output_tokens": 8000,
-            }
+            },
+            safety_settings=[
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ]
         )
         
         # First, get improvement suggestions in bullet points

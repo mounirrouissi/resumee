@@ -292,39 +292,50 @@ Use these EXACT markers to indicate structure:
 [TITLE: text] - Main name/title (will be centered, large, bold)
 [CONTACT: item] - Each contact piece (will be centered)
 [SECTION: header] - Major sections like EDUCATION, EXPERIENCE, SKILLS (will be BOLD, ALL CAPS, with underline)
-[SUBSECTION: text] - Job titles, company names, degrees (will be bold)
-[DATE: date] - All dates (format: Month YYYY - Month YYYY)
+[EXPERIENCE_ITEM: Company | Location | Role | Date] - For job entries (will use split alignment)
+[EDUCATION_ITEM: Institution | Location | Degree | Date] - For education entries (will use split alignment)
+[SUBSECTION: text] - For other bold subsections if needed
 [BOLD: text] - Emphasis items within text
 [BULLET: text] - List items, achievements (will be properly indented with • character)
 [PARAGRAPH] followed by text - Paragraph content
 [SPACING] - Vertical space between sections
 
+CRITICAL RULES FOR EXPERIENCE AND EDUCATION:
+1. YOU MUST USE `[EXPERIENCE_ITEM]` for ALL job entries.
+2. YOU MUST USE `[EDUCATION_ITEM]` for ALL education entries.
+3. DO NOT output concatenated lines like "Role, Company | Location | Date". This is WRONG.
+4. DO NOT use `[SUBSECTION]` or `[DATE]` for these items.
+5. The format MUST be exactly: `[EXPERIENCE_ITEM: Company | Location | Role | Date]`
+   - Note the order: Company first, then Location, then Role, then Date.
+   - Use pipes `|` to separate the 4 fields.
+
+❌ WRONG (DO NOT DO THIS):
+[SUBSECTION: Software Engineer, Tech Company Inc., Boston, MA]
+[DATE: June 2020 - Present]
+OR
+Full Stack Developer, TickTicket | Remote | August 2023 - December 2023
+
+✅ CORRECT (DO THIS):
+[EXPERIENCE_ITEM: Tech Company Inc. | Boston, MA | Software Engineer | June 2020 - Present]
+
 CRITICAL: 
 - ALL section headers (EDUCATION, EXPERIENCE, SKILLS, etc.) MUST use [SECTION: ] marker
 - ALL bullet points MUST use [BULLET: ] marker for proper alignment
+- Use [EXPERIENCE_ITEM] and [EDUCATION_ITEM] for the respective sections to ensure correct formatting
 - Section names MUST be in ALL CAPS (e.g., [SECTION: EDUCATION] not [SECTION: Education])
 
 EXAMPLE OUTPUT (showing proper formatting):
 [TITLE: JOHN SMITH]
-[CONTACT: 123 Main Street, Boston, MA 02101]
-[CONTACT: Phone: (555) 123-4567]
-[CONTACT: Email: john.smith@email.com]
-
-FULL EXAMPLE OUTPUT:
-[TITLE: JOHN SMITH]
 [CONTACT: Boston, MA • (555) 123-4567 • john.smith@email.com • linkedin.com/in/johnsmith]
 [SPACING]
 [SECTION: EDUCATION]
-[SUBSECTION: Massachusetts Institute of Technology, Cambridge, MA]
-[SUBSECTION: Bachelor of Science in Computer Science (GPA: 3.8/4.0)]
-[DATE: September 2016 - May 2020]
+[EDUCATION_ITEM: Massachusetts Institute of Technology | Cambridge, MA | Bachelor of Science in Computer Science (GPA: 3.8/4.0) | September 2016 - May 2020]
 [BULLET: Relevant coursework: Data Structures, Algorithms, Machine Learning, Artificial Intelligence]
 [BULLET: Dean's List: Fall 2018, Spring 2019, Fall 2019]
 [BULLET: Activities: Computer Science Club President, Hackathon Organizer]
 [SPACING]
 [SECTION: EXPERIENCE]
-[SUBSECTION: Software Engineer, Tech Company Inc., Boston, MA]
-[DATE: June 2020 - Present]
+[EXPERIENCE_ITEM: Tech Company Inc. | Boston, MA | Software Engineer | June 2020 - Present]
 [BULLET: Developed and deployed 5 full-stack web applications using React and Node.js, serving 10,000+ users]
 [BULLET: Optimized database queries reducing load time by 40% and improving user experience]
 [BULLET: Led cross-functional team of 8 developers to deliver project 2 months ahead of schedule]
@@ -336,6 +347,7 @@ FULL EXAMPLE OUTPUT:
 
 NOTE: In the final PDF:
 - "EDUCATION", "EXPERIENCE", "SKILLS" will appear in BOLD ALL CAPS with underline
+- Experience and Education items will be formatted with Company/Location on one line and Role/Date on the next
 - All bullet points will be properly aligned with consistent indentation
 - Each bullet will have the • character followed by proper spacing
 
