@@ -261,128 +261,44 @@ def generate_improved_pdf(text: str, output_path: str, template_id: str = "profe
         
         # Check if text has formatting markers
         formatter = PDFFormatter(template_styles)
-        if formatter.has_formatting_markers(text):
+        has_markers = formatter.has_formatting_markers(text)
+        
+        # Detailed marker detection logging
+        logger.info("=" * 80)
+        logger.info("MARKER DETECTION")
+        logger.info("=" * 80)
+        markers_to_check = ['[TITLE:', '[CONTACT:', '[SECTION:', '[SUBSECTION:', 
+                           '[DATE:', '[BULLET:', '[PARAGRAPH]', '[SPACING]', '[BOLD:']
+        for marker in markers_to_check:
+            count = text.count(marker)
+            if count > 0:
+                logger.info(f"✓ Found {count} instances of {marker}")
+            else:
+                logger.info(f"✗ Missing: {marker}")
+        logger.info("=" * 80)
+        
+        if has_markers:
             logger.info("✓ Using advanced PDF formatter with markers")
             generate_pdf_from_formatted_text(text, output_path, template_styles)
             return
         
-        # Fall back to simple rendering if no markers
-        logger.info("⚠️ No formatting markers - using simple text parsing")
-        # Harvard CV spec: 20-25mm margins (0.8-1.0 inch) = 0.83 inch ≈ 21mm
-        doc = SimpleDocTemplate(
-            output_path,
-            pagesize=letter,  # US Letter (8.5 × 11 in)
-            rightMargin=0.83*inch,  # 21mm
-            leftMargin=0.83*inch,
-            topMargin=0.83*inch,
-            bottomMargin=0.83*inch
+        # No fallback - raise error if markers are missing
+        logger.error("=" * 80)
+        logger.error("❌ CRITICAL ERROR: NO FORMATTING MARKERS FOUND")
+        logger.error("=" * 80)
+        logger.error("The AI did not generate the required formatting markers.")
+        logger.error("This indicates one of the following issues:")
+        logger.error("  1. AI service is not working properly")
+        logger.error("  2. AI is in simulation mode (check for API key issues)")
+        logger.error("  3. System prompt is not being sent correctly")
+        logger.error("")
+        logger.error("Required markers: [TITLE:, [CONTACT:, [SECTION:, [BULLET:, etc.")
+        logger.error("Check the debug file for the raw AI output.")
+        logger.error("=" * 80)
+        raise Exception(
+            "PDF generation failed: AI did not generate required formatting markers. "
+            "Please check the backend logs and ensure the AI service is configured correctly."
         )
-        
-        # Use template styles
-        name_style = template_styles['name']
-        job_title_style = template_styles['job_title']
-        contact_style = template_styles['contact']
-        section_heading_style = template_styles['section_heading']
-        body_style = template_styles['body']
-        bullet_style = template_styles['bullet']
-        divider_style = template_styles['divider']
-        
-        story = []
-        lines = text.split('\n')
-        logger.info(f"Processing {len(lines)} lines for Harvard CV format PDF")
-        logger.info(f"Harvard CV Requirements:")
-        logger.info(f"   ✓ Centered header (name & contact)")
-        logger.info(f"   ✓ Times New Roman font")
-        logger.info(f"   ✓ Education section first")
-        logger.info(f"   ✓ Section dividers with horizontal lines")
-        logger.info(f"   ✓ Professional formatting")
-        
-        is_first_line = True
-        is_contact_section = False
-        contact_lines = []
-        
-        for i, line in enumerate(lines):
-            line_stripped = line.strip()
-            
-            # Skip empty lines but add spacing
-            if not line_stripped:
-                story.append(Spacer(1, 0.08*inch))
-                continue
-            
-            # Detect section dividers (lines with ─ or ━ characters)
-            if '─' in line_stripped or '━' in line_stripped or '═' in line_stripped:
-                # Add a simple horizontal line for Harvard format
-                hr = HRFlowable(width="100%", thickness=1, color=colors.black, spaceBefore=1, spaceAfter=1)
-                story.append(hr)
-                continue
-            
-            # First line should be the name (centered, bold, larger - NO underline)
-            if is_first_line and not any(char in line_stripped for char in ['━', '═', '─']):
-                story.append(Paragraph(line_stripped, name_style))
-                is_first_line = False
-                is_contact_section = True
-                continue
-            
-            # Contact information section (next 1-3 lines after name)
-            if is_contact_section:
-                # Check if this is still contact info (contains email, phone, address, etc.)
-                if any(indicator in line_stripped.lower() for indicator in 
-                       ['@', 'phone:', 'email:', 'linkedin', 'street', 'city', '|', 'http']):
-                    story.append(Paragraph(line_stripped, contact_style))
-                    continue
-                else:
-                    # End of contact section
-                    is_contact_section = False
-            
-            # Section headings (all caps or specific keywords)
-            if (line_stripped.isupper() and len(line_stripped) < 60 and 
-                any(keyword in line_stripped for keyword in 
-                    ['EDUCATION', 'EXPERIENCE', 'SKILLS', 'LEADERSHIP', 'ACTIVITIES',
-                     'PUBLICATIONS', 'RESEARCH', 'AWARDS', 'HONORS', 'CERTIFICATIONS',
-                     'PROJECTS', 'PROFESSIONAL', 'WORK', 'TECHNICAL', 'LANGUAGES',
-                     'ADDITIONAL', 'VOLUNTEER', 'INTERESTS'])):
-                story.append(Spacer(1, 0.08*inch))
-                # Make it bold AND underlined with HTML tags
-                underlined_header = f'<b><u>{line_stripped}</u></b>'
-                story.append(Paragraph(underlined_header, section_heading_style))
-                # Add horizontal line below
-                story.append(Spacer(1, 0.03*inch))
-                hr = HRFlowable(width="100%", thickness=1.5, color=colors.black, spaceBefore=0, spaceAfter=0)
-                story.append(hr)
-                story.append(Spacer(1, 0.06*inch))
-                continue
-            
-            # Bullet points
-            if line_stripped.startswith('•') or line_stripped.startswith('-'):
-                # Remove the bullet character, we'll add it with the style
-                text_without_bullet = line_stripped[1:].strip()
-                story.append(Paragraph(f'• {text_without_bullet}', bullet_style))
-                continue
-            
-            # Job/Education headers with dates (contains location and dates)
-            # Harvard format: "Title, Company, Location                    Month Year - Month Year"
-            if (',' in line_stripped and 
-                any(year in line_stripped for year in ['20', '19']) and
-                len(line_stripped) > 20):
-                # This is likely a job/education header - make it bold
-                story.append(Paragraph(f'<b>{line_stripped}</b>', body_style))
-                continue
-            
-            # Degree lines (contains "GPA:" or degree keywords)
-            if any(keyword in line_stripped for keyword in ['GPA:', 'Bachelor', 'Master', 'Ph.D', 'B.S.', 'M.S.', 'B.A.', 'M.A.']):
-                story.append(Paragraph(line_stripped, body_style))
-                continue
-            
-            # Regular body text
-            story.append(Paragraph(line_stripped, body_style))
-        
-        # Build the PDF
-        doc.build(story)
-        logger.info("✓ Harvard CV format PDF generation successful")
-        logger.info(f"   Template: {template_id}")
-        logger.info(f"   Font: Times New Roman (serif)")
-        logger.info(f"   Header: Centered")
-        logger.info(f"   Format: ATS-optimized Harvard style")
         
     except Exception as e:
         logger.error(f"Error generating PDF: {str(e)}", exc_info=True)

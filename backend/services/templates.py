@@ -89,7 +89,7 @@ class ProfessionalTemplate(CVTemplate):
             'section_heading': ParagraphStyle(
                 'HarvardHeading',
                 parent=base_styles['Normal'],
-                fontName='Times-Bold',
+                fontName='Times-Bold',  # Same bold font as title, just smaller
                 fontSize=12,  # 11-13pt
                 textColor=colors.black,
                 spaceAfter=4,  # 6-8pt below (reduced due to HR line)

@@ -166,6 +166,12 @@ async def upload_resume(
             logger.warning("   This indicates the AI improvement did not work!")
         else:
             logger.info("✓ Text was successfully modified")
+        
+        # Save debug output
+        debug_path = os.path.join(OUTPUT_DIR, f"{file_id}_debug.txt")
+        with open(debug_path, "w", encoding="utf-8") as f:
+            f.write(improved_text)
+        logger.info(f"Debug text saved to: {debug_path}")
         logger.info("=" * 80)
         
         progress_store[file_id] = {

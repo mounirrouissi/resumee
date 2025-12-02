@@ -183,13 +183,13 @@ class PDFFormatter:
                 story.append(para)
                 
             elif elem_type == 'section':
-                # Section header: Bold and underlined
+                # Section header: Bold (via style) and horizontal line
                 story.append(Spacer(1, 0.12*inch))
-                # Use both underline tag AND HRFlowable for strong visual effect
-                underlined_content = f'<b><u>{content.upper()}</u></b>'
-                para = Paragraph(underlined_content, self.template_styles['section_heading'])
+                # Style is already Times-Bold, so no need for <b> tags
+                # Use HRFlowable for the line, so no need for <u> tags
+                para = Paragraph(f"<b><u>{content.upper()}</u></b>", self.template_styles['section_heading'])
                 story.append(para)
-                # Add horizontal line below for extra emphasis
+                # Add horizontal line below
                 story.append(Spacer(1, 0.03*inch))
                 hr = HRFlowable(width="100%", thickness=1.5, color=colors.black, spaceBefore=0, spaceAfter=0)
                 story.append(hr)
