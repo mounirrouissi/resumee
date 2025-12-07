@@ -34,7 +34,7 @@ export interface UploadResumeResponse {
   original_filename: string;
   timestamp: string;
   original_text: string;
-  improved_text: string;
+  improved_data: any; // JSON object with structured resume data
   download_url: string;
 }
 
@@ -162,5 +162,22 @@ export const resumeApi = {
       console.error('Failed to get progress:', error);
       return { stage: 'unknown', message: 'Processing...', progress: 0 };
     }
+  },
+
+  async generatePdf(fileId: string, userId: string, templateId: string = "professional"): Promise<{ download_url: string }> {
+    const response = await fetch(`${API_BASE_URL}/api/generate-pdf`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ file_id: fileId, user_id: userId, template_id: templateId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Failed to generate PDF' }));
+      throw new Error(error.detail);
+    }
+
+    return await response.json();
   },
 };

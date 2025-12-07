@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ResumeProvider } from "@/contexts/ResumeContext";
 import { UserProvider, useUser } from "@/contexts/UserContext";
 import { CreditsProvider } from "@/contexts/CreditsContext";
+import { RevenueCatProvider } from "@/contexts/RevenueCatContext";
 
 function AppContent() {
   const { isAuthenticated } = useUser();
@@ -31,10 +32,12 @@ export default function App() {
           <KeyboardProvider>
             <UserProvider>
               <CreditsProvider>
-                <ResumeProvider>
-                  <AppContent />
-                  <StatusBar style="auto" />
-                </ResumeProvider>
+                <RevenueCatProvider>
+                  <ResumeProvider>
+                    <AppContent />
+                    <StatusBar style="auto" />
+                  </ResumeProvider>
+                </RevenueCatProvider>
               </CreditsProvider>
             </UserProvider>
           </KeyboardProvider>

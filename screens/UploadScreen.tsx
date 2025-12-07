@@ -109,7 +109,7 @@ export default function UploadScreen() {
       setProcessingStage("Your resume is ready!");
 
       deleteResume(tempId);
-      addResume({ id: response.id, originalFilename: selectedFile.name, originalText: response.original_text, improvedText: response.improved_text, dateProcessed: new Date(), status: "completed", downloadUrl: response.download_url });
+      addResume({ id: response.id, originalFilename: selectedFile.name, originalText: response.original_text, improvedText: typeof response.improved_data === 'string' ? response.improved_data : JSON.stringify(response.improved_data), dateProcessed: new Date(), status: "completed", downloadUrl: response.download_url });
 
       setCurrentProcessingId(null);
       setSelectedFile(null);

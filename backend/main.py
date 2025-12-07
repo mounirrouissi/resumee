@@ -175,7 +175,7 @@ async def upload_resume(
         logger.info("✓ AI improvement complete")
         logger.info(f"   Data keys: {list(improved_data.keys())}")
         
-        # Save debug output
+        # Save debug output (Persist data for later generation)
         debug_path = os.path.join(OUTPUT_DIR, f"{file_id}_debug.json")
         import json
         with open(debug_path, "w", encoding="utf-8") as f:
@@ -189,14 +189,19 @@ async def upload_resume(
             "progress": 80
         }
         
-        improved_path = os.path.join(OUTPUT_DIR, f"{file_id}_improved.pdf")
-        logger.info(f"Generating improved PDF at {improved_path}")
+        logger.info("=" * 80)
+        logger.info("STEP 3: PDF GENERATION")
+        logger.info("=" * 80)
         
-        # Run blocking PDF generation in thread pool
+        # Generate the PDF immediately
+        improved_path = os.path.join(OUTPUT_DIR, f"{file_id}_improved.pdf")
+        loop = asyncio.get_event_loop()
         await loop.run_in_executor(
             executor, generate_improved_pdf, improved_data, improved_path, template_id
         )
-        logger.info("Improved PDF generated successfully")
+        
+        logger.info(f"✓ PDF generated successfully: {improved_path}")
+        logger.info("=" * 80)
         
         progress_store[file_id] = {
             "stage": "complete",
@@ -209,7 +214,7 @@ async def upload_resume(
             "original_filename": file.filename,
             "timestamp": timestamp,
             "original_text": original_text,
-            "improved_data": improved_data, # Return JSON data instead of text
+            "improved_data": improved_data,
             "download_url": f"/api/download/{file_id}"
         }
     
@@ -240,7 +245,48 @@ async def download_resume(file_id: str):
         filename=f"improved_resume_{file_id}.pdf"
     )
 
+from pydantic import BaseModel
+from backend.services.revenue_cat_service import revenue_cat_service
+
+class GeneratePDFRequest(BaseModel):
+    file_id: str
+    user_id: str
+    template_id: str = "professional"
+
 @app.get("/health")
 async def health_check():
     logger.info("Health check called")
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.post("/api/generate-pdf")
+async def generate_pdf(request: GeneratePDFRequest):
+    """
+    Generate PDF for a file. Requires Pro Access verification.
+    """
+    logger.info(f"Generate PDF request for file: {request.file_id}, User: {request.user_id}")
+    
+    # 1. Verify Entitlement
+    if not revenue_cat_service.verify_pro_access(request.user_id):
+        logger.warning(f"Access denied for user {request.user_id}")
+        raise HTTPException(status_code=403, detail="Pro access required to generate PDF")
+        
+    # 2. Load Data
+    debug_path = os.path.join(OUTPUT_DIR, f"{request.file_id}_debug.json")
+    if not os.path.exists(debug_path):
+        raise HTTPException(status_code=404, detail="Resume data not found. Please upload again.")
+        
+    import json
+    with open(debug_path, "r", encoding="utf-8") as f:
+        improved_data = json.load(f)
+        
+    # 3. Generate PDF
+    improved_path = os.path.join(OUTPUT_DIR, f"{request.file_id}_improved.pdf")
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(
+        executor, generate_improved_pdf, improved_data, improved_path, request.template_id
+    )
+    
+    return {
+        "status": "success",
+        "download_url": f"/api/download/{request.file_id}"
+    }
