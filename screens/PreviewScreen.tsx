@@ -117,65 +117,15 @@ export default function PreviewScreen() {
     <>
       <ScreenScrollView>
         <View style={styles.container}>
-          <View style={styles.toggleContainer}>
-            <Pressable
-              style={[
-                styles.toggleButton,
-                !showComparison && { backgroundColor: theme.primary },
-              ]}
-              onPress={() => setShowComparison(false)}
-            >
-              <ThemedText
-                style={[
-                  Typography.bodySmall,
-                  { color: !showComparison ? theme.buttonText : theme.textSecondary },
-                ]}
-              >
-                Improved
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.toggleButton,
-                showComparison && { backgroundColor: theme.primary },
-              ]}
-              onPress={() => setShowComparison(true)}
-            >
-              <ThemedText
-                style={[
-                  Typography.bodySmall,
-                  { color: showComparison ? theme.buttonText : theme.textSecondary },
-                ]}
-              >
-                Comparison
-              </ThemedText>
-            </Pressable>
+          <View style={styles.successContainer}>
+            <Feather name="check-circle" size={64} color={theme.success} />
+            <ThemedText style={[Typography.h2, { marginTop: Spacing.md, textAlign: 'center' }]}>
+              Resume Improved!
+            </ThemedText>
+            <ThemedText style={[Typography.body, { marginTop: Spacing.sm, textAlign: 'center', color: theme.textSecondary }]}>
+              Your Harvard-style PDF resume is ready for download.
+            </ThemedText>
           </View>
-
-          {showComparison ? (
-            <>
-              <Card style={styles.contentCard}>
-                <ThemedText style={[Typography.h2, styles.cardTitle]}>Original</ThemedText>
-                <ThemedText style={[Typography.bodySmall, styles.resumeText]}>
-                  {resume.originalText}
-                </ThemedText>
-              </Card>
-              <Card style={styles.contentCard}>
-                <ThemedText style={[Typography.h2, styles.cardTitle]}>Improved</ThemedText>
-                <ThemedText style={[Typography.bodySmall, styles.resumeText]}>
-                  {resume.improvedText}
-                </ThemedText>
-              </Card>
-            </>
-          ) : (
-            <Card style={styles.contentCard}>
-              <ThemedText style={[Typography.bodySmall, styles.resumeText]}>
-                {resume.improvedText}
-              </ThemedText>
-            </Card>
-          )}
-
-          <View style={{ height: 80 }} />
         </View>
       </ScreenScrollView>
 
@@ -277,5 +227,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+  },
+  successContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing['3xl'],
   },
 });

@@ -88,10 +88,15 @@ export default function ResumeDetailScreen() {
           </Card>
 
           <Card style={styles.contentCard}>
-            <ThemedText style={[Typography.h2, styles.cardTitle]}>Improved Resume</ThemedText>
-            <ThemedText style={[Typography.bodySmall, styles.resumeText]}>
-              {resume.improvedText}
-            </ThemedText>
+            <View style={{ alignItems: 'center', padding: Spacing.md }}>
+              <Feather name="check-circle" size={48} color={theme.success} />
+              <ThemedText style={[Typography.h3, { marginTop: Spacing.md, textAlign: 'center' }]}>
+                Ready for Download
+              </ThemedText>
+              <ThemedText style={[Typography.bodySmall, { marginTop: Spacing.sm, textAlign: 'center', color: theme.textSecondary }]}>
+                This resume has been processed and formatted.
+              </ThemedText>
+            </View>
           </Card>
 
           <View style={{ height: 80 }} />

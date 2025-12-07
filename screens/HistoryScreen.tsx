@@ -133,7 +133,7 @@ export default function HistoryScreen() {
                   ]}
                   numberOfLines={2}
                 >
-                  {resume.improvedText.substring(0, 100)}...
+                  Resume processed successfully
                 </ThemedText>
               ) : null}
             </Card>
