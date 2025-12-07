@@ -11,6 +11,7 @@ import LoginScreen from "@/screens/LoginScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ResumeProvider } from "@/contexts/ResumeContext";
 import { UserProvider, useUser } from "@/contexts/UserContext";
+import { CreditsProvider } from "@/contexts/CreditsContext";
 
 function AppContent() {
   const { isAuthenticated } = useUser();
@@ -29,10 +30,12 @@ export default function App() {
         <GestureHandlerRootView style={styles.root}>
           <KeyboardProvider>
             <UserProvider>
-              <ResumeProvider>
-                <AppContent />
-                <StatusBar style="auto" />
-              </ResumeProvider>
+              <CreditsProvider>
+                <ResumeProvider>
+                  <AppContent />
+                  <StatusBar style="auto" />
+                </ResumeProvider>
+              </CreditsProvider>
             </UserProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>

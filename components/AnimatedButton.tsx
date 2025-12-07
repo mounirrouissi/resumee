@@ -1,176 +1,107 @@
-import React from 'react';
-import { Pressable, StyleSheet, ActivityIndicator, Animated, ViewStyle, TextStyle } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ThemedText } from './ThemedText';
-import { useTheme } from '@/hooks/useTheme';
-import { Spacing, BorderRadius, Typography, Shadows, Animations, Gradients } from '@/constants/theme';
+import React, { ReactNode } from "react";
+import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, interpolateColor, useAnimatedProps } from "react-native-reanimated";
+import { Feather } from "@expo/vector-icons";
+
+import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@/hooks/useTheme";
+import { BorderRadius, Spacing, Typography, Gradients, Shadows, Animations } from "@/constants/theme";
 
 interface AnimatedButtonProps {
-    title: string;
-    onPress: () => void;
-    disabled?: boolean;
-    loading?: boolean;
-    success?: boolean;
-    variant?: 'primary' | 'secondary' | 'outline';
-    icon?: keyof typeof Feather.glyphMap;
-    style?: ViewStyle;
-    textStyle?: TextStyle;
-    gradient?: boolean;
+  onPress?: () => void;
+  title: string;
+  icon?: keyof typeof Feather.glyphMap;
+  style?: StyleProp<ViewStyle>;
+  disabled?: boolean;
+  loading?: boolean;
+  variant?: "primary" | "secondary" | "success";
 }
 
-export default function AnimatedButton({
-    title,
-    onPress,
-    disabled = false,
-    loading = false,
-    success = false,
-    variant = 'primary',
-    icon,
-    style,
-    textStyle,
-    gradient = false,
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export function AnimatedButton({
+  onPress,
+  title,
+  icon,
+  style,
+  disabled = false,
+  loading = false,
+  variant = "primary",
 }: AnimatedButtonProps) {
-    const { theme, colorScheme } = useTheme();
-    const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const { theme, colorScheme } = useTheme();
+  const scale = useSharedValue(1);
+  const pressed = useSharedValue(0);
 
-    const handlePressIn = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 0.95,
-            useNativeDriver: true,
-            speed: 50,
-        }).start();
-    };
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: disabled ? 0.5 : 1,
+  }));
 
-    const handlePressOut = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-            friction: 3,
-            tension: 40,
-        }).start();
-    };
+  const handlePressIn = () => {
+    if (!disabled && !loading) {
+      scale.value = withSpring(0.96, Animations.spring);
+      pressed.value = withSpring(1, Animations.spring);
+    }
+  };
 
-    const getBackgroundColor = () => {
-        if (disabled) return theme.border;
-        if (variant === 'primary') return theme.primary;
-        if (variant === 'secondary') return theme.backgroundSecondary;
-        return 'transparent';
-    };
+  const handlePressOut = () => {
+    scale.value = withSpring(1, Animations.spring);
+    pressed.value = withSpring(0, Animations.spring);
+  };
 
-    const getTextColor = () => {
-        if (disabled) return theme.textSecondary;
-        if (variant === 'primary') return theme.buttonText;
-        return theme.text;
-    };
+  const getGradientColors = () => {
+    switch (variant) {
+      case "success":
+        return colorScheme === "dark" ? Gradients.dark.success : Gradients.light.success;
+      case "secondary":
+        return colorScheme === "dark" ? Gradients.dark.secondary : Gradients.light.secondary;
+      default:
+        return colorScheme === "dark" ? Gradients.dark.primary : Gradients.light.primary;
+    }
+  };
 
-    const getBorderColor = () => {
-        if (variant === 'outline') return theme.border;
-        return 'transparent';
-    };
+  const getShadow = () => {
+    switch (variant) {
+      case "success":
+        return Shadows.glowSuccess;
+      default:
+        return Shadows.glow;
+    }
+  };
 
-    const gradientColors = gradient
-        ? (colorScheme === 'dark' ? Gradients.dark.primary : Gradients.light.primary)
-        : [getBackgroundColor(), getBackgroundColor()];
-
-    const renderContent = () => (
-        <>
-            {loading && (
-                <ActivityIndicator
-                    size="small"
-                    color={getTextColor()}
-                    style={styles.loader}
-                />
-            )}
-            {success && !loading && (
-                <Feather
-                    name="check-circle"
-                    size={20}
-                    color={getTextColor()}
-                    style={styles.icon}
-                />
-            )}
-            {icon && !loading && !success && (
-                <Feather
-                    name={icon}
-                    size={20}
-                    color={getTextColor()}
-                    style={styles.icon}
-                />
-            )}
-            <ThemedText
-                style={[
-                    Typography.button,
-                    { color: getTextColor() },
-                    textStyle
-                ]}
-            >
-                {title}
-            </ThemedText>
-        </>
-    );
-
-    return (
-        <Animated.View
-            style={[
-                { transform: [{ scale: scaleAnim }] },
-                style
-            ]}
-        >
-            <Pressable
-                onPress={onPress}
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-                disabled={disabled || loading}
-                style={({ pressed }) => [
-                    styles.button,
-                    {
-                        borderColor: getBorderColor(),
-                        borderWidth: variant === 'outline' ? 1 : 0,
-                        opacity: pressed ? 0.8 : 1,
-                    },
-                    !gradient && { backgroundColor: getBackgroundColor() },
-                    variant === 'primary' && !disabled && Shadows.medium,
-                ]}
-            >
-                {gradient && !disabled ? (
-                    <LinearGradient
-                        colors={gradientColors}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.gradient}
-                    >
-                        {renderContent()}
-                    </LinearGradient>
-                ) : (
-                    <>{renderContent()}</>
-                )}
-            </Pressable>
-        </Animated.View>
-    );
+  return (
+    <AnimatedPressable
+      onPress={disabled || loading ? undefined : onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled || loading}
+      style={[styles.button, getShadow(), style, animatedStyle]}
+    >
+      <LinearGradient
+        colors={getGradientColors()}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradient}
+      >
+        {icon && <Feather name={icon} size={20} color="#FFF" style={{ marginRight: Spacing.sm }} />}
+        <ThemedText style={[Typography.button, { color: "#FFF" }]}>{title}</ThemedText>
+      </LinearGradient>
+    </AnimatedPressable>
+  );
 }
 
 const styles = StyleSheet.create({
-    button: {
-        height: Spacing.buttonHeight,
-        borderRadius: BorderRadius.sm,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: Spacing.xl,
-        overflow: 'hidden',
-    },
-    gradient: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: Spacing.xl,
-    },
-    icon: {
-        marginRight: Spacing.sm,
-    },
-    loader: {
-        marginRight: Spacing.sm,
-    },
+  button: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.md,
+    overflow: "hidden",
+  },
+  gradient: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.xl,
+  },
 });

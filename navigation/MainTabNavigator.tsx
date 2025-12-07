@@ -2,11 +2,12 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import HistoryStackNavigator from "@/navigation/HistoryStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
+import { BorderRadius, Spacing } from "@/constants/theme";
 
 export type MainTabParamList = {
   HistoryTab: undefined;
@@ -23,16 +24,25 @@ export default function MainTabNavigator() {
     <Tab.Navigator
       initialRouteName="HomeTab"
       screenOptions={{
-        tabBarActiveTintColor: theme.tabIconSelected,
-        tabBarInactiveTintColor: theme.tabIconDefault,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textMuted,
         tabBarStyle: {
           position: "absolute",
           backgroundColor: Platform.select({
             ios: "transparent",
-            android: theme.backgroundRoot,
+            android: theme.backgroundDefault,
+            web: theme.backgroundDefault,
           }),
           borderTopWidth: 0,
           elevation: 0,
+          height: Platform.select({ ios: 88, android: 70, web: 70 }),
+          paddingBottom: Platform.select({ ios: 28, android: 12, web: 12 }),
+          paddingTop: 12,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+          marginTop: 4,
         },
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
@@ -50,8 +60,10 @@ export default function MainTabNavigator() {
         component={HistoryStackNavigator}
         options={{
           title: "History",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="clock" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconContainer, focused && { backgroundColor: theme.primary + '15' }]}>
+              <Feather name="clock" size={22} color={color} />
+            </View>
           ),
         }}
       />
@@ -60,8 +72,10 @@ export default function MainTabNavigator() {
         component={HomeStackNavigator}
         options={{
           title: "Upload",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="upload-cloud" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconContainer, focused && { backgroundColor: theme.primary + '15' }]}>
+              <Feather name="upload-cloud" size={22} color={color} />
+            </View>
           ),
         }}
       />
@@ -70,11 +84,23 @@ export default function MainTabNavigator() {
         component={ProfileStackNavigator}
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconContainer, focused && { backgroundColor: theme.primary + '15' }]}>
+              <Feather name="user" size={22} color={color} />
+            </View>
           ),
         }}
       />
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    width: 44,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
