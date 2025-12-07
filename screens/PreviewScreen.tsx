@@ -194,9 +194,56 @@ export default function PreviewScreen() {
 
   const handleShare = async () => {
     try {
-      await Share.share({ message: resume.improvedText, title: "My Improved Resume" });
-    } catch (error) {
-      Alert.alert("Error", "Failed to share resume");
+      const downloadUrl = resumeApi.getDownloadUrl(resume.id);
+
+      if (Platform.OS === 'web') {
+        // On web, share the download link
+        if (navigator.share) {
+          await navigator.share({
+            title: 'My Improved Resume',
+            text: 'Check out my professionally formatted resume',
+            url: downloadUrl,
+          });
+        } else {
+          // Fallback: copy link to clipboard
+          await navigator.clipboard.writeText(downloadUrl);
+          Alert.alert('Link Copied', 'Download link copied to clipboard');
+        }
+        return;
+      }
+
+      // On mobile, download the PDF first, then share it
+      const fileUri = FileSystem.documentDirectory + `improved_resume_${resume.id}.pdf`;
+      
+      // Check if file already exists locally
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      
+      if (!fileInfo.exists) {
+        // Download the file first
+        const downloadResumable = FileSystem.createDownloadResumable(
+          downloadUrl,
+          fileUri
+        );
+        const result = await downloadResumable.downloadAsync();
+        
+        if (!result || result.status !== 200) {
+          throw new Error('Failed to download PDF for sharing');
+        }
+      }
+
+      // Share the PDF file
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Share Your Resume',
+          UTI: 'com.adobe.pdf',
+        });
+      } else {
+        Alert.alert('Sharing Not Available', 'Sharing is not available on this device');
+      }
+    } catch (error: any) {
+      console.error('Share error:', error);
+      Alert.alert('Share Failed', error.message || 'Failed to share resume');
     }
   };
 

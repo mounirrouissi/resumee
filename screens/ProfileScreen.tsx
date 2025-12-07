@@ -16,8 +16,7 @@ export default function ProfileScreen() {
   const { theme, isDark, colorScheme } = useTheme();
   const navigation = useNavigation();
   const { credits } = useCredits();
-  const { isAuthenticated, userType, userProfile, displayName, setDisplayName, avatarUri, setAvatarUri, signOut } = useUser();
-  const [localName, setLocalName] = useState(displayName);
+  const { userProfile, signOut } = useUser();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -29,15 +28,6 @@ export default function ProfileScreen() {
       Animated.spring(slideAnim, { toValue: 0, ...Animations.spring, useNativeDriver: true }),
     ]).start();
   }, []);
-
-  const handleSelectAvatar = () => {
-    const presetAvatar = require("@/assets/images/avatar-preset.png");
-    setAvatarUri(avatarUri ? "" : Image.resolveAssetSource(presetAvatar).uri);
-  };
-
-  const handleNameBlur = () => {
-    if (localName.trim()) setDisplayName(localName.trim());
-  };
 
   const handleSignOut = () => signOut();
 

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
