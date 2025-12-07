@@ -242,7 +242,7 @@ async def download_resume(file_id: str):
     return FileResponse(
         file_path,
         media_type="application/pdf",
-        filename=f"improved_resume_{file_id}.pdf"
+        filename="CV.pdf"
     )
 
 from pydantic import BaseModel

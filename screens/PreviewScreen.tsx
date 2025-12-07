@@ -154,7 +154,7 @@ export default function PreviewScreen() {
         throw new Error('PDF not ready. Please try again.');
       }
 
-      const fileUri = FileSystem.documentDirectory + `improved_resume_${resume.id}.pdf`;
+      const fileUri = FileSystem.documentDirectory + 'CV.pdf';
       const downloadResumable = FileSystem.createDownloadResumable(
         downloadUrl,
         fileUri,
@@ -175,9 +175,13 @@ export default function PreviewScreen() {
       
       setTimeout(async () => {
         if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(result.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
+          await Sharing.shareAsync(result.uri, { 
+            mimeType: 'application/pdf', 
+            UTI: 'com.adobe.pdf',
+            dialogTitle: 'Share Your CV'
+          });
         } else {
-          Alert.alert('Success', 'PDF saved to documents directory');
+          Alert.alert('Success', 'CV saved to documents directory');
         }
         setDownloadSuccess(false);
       }, 1500);
@@ -213,29 +217,24 @@ export default function PreviewScreen() {
       }
 
       // On mobile, download the PDF first, then share it
-      const fileUri = FileSystem.documentDirectory + `improved_resume_${resume.id}.pdf`;
+      const fileUri = FileSystem.documentDirectory + 'CV.pdf';
       
-      // Check if file already exists locally
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      // Always download fresh copy for sharing
+      const downloadResumable = FileSystem.createDownloadResumable(
+        downloadUrl,
+        fileUri
+      );
+      const result = await downloadResumable.downloadAsync();
       
-      if (!fileInfo.exists) {
-        // Download the file first
-        const downloadResumable = FileSystem.createDownloadResumable(
-          downloadUrl,
-          fileUri
-        );
-        const result = await downloadResumable.downloadAsync();
-        
-        if (!result || result.status !== 200) {
-          throw new Error('Failed to download PDF for sharing');
-        }
+      if (!result || result.status !== 200) {
+        throw new Error('Failed to download PDF for sharing');
       }
 
-      // Share the PDF file
+      // Share the PDF file with professional name
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/pdf',
-          dialogTitle: 'Share Your Resume',
+          dialogTitle: 'Share Your CV',
           UTI: 'com.adobe.pdf',
         });
       } else {
