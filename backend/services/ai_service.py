@@ -1,7 +1,13 @@
 import os
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from backend.services.templates import get_template
+
+# Thread pool for running blocking Gemini API calls
+_executor = ThreadPoolExecutor(max_workers=4)
 
 logger = logging.getLogger(__name__)
 
@@ -99,139 +105,88 @@ WHAT TO AVOID:
 
 Return ONLY the improved resume text following the EXACT structure above with section dividers."""
 
-async def improve_resume_text(original_text: str, file_id: str = None, template_id: str = "professional") -> str:
+import json
+
+async def improve_resume_text(original_text: str, file_id: str = None, template_id: str = "professional") -> dict:
     logger.info("=" * 80)
-    logger.info("STARTING RESUME IMPROVEMENT PROCESS")
+    logger.info("STARTING RESUME IMPROVEMENT PROCESS (JSON MODE)")
     logger.info("=" * 80)
     logger.info(f"File ID: {file_id}")
     logger.info(f"Template ID: {template_id}")
-    logger.info(f"Original text length: {len(original_text)} characters")
-    logger.info(f"Original text preview (first 200 chars): {original_text[:200]}")
     
     try:
         api_key = os.getenv("GEMINI_API_KEY", "")
         
         if not api_key:
             logger.warning("⚠️ No Gemini API key found, using simulation mode")
-            improved = simulate_improvement(original_text)
-            logger.info(f"Simulation result length: {len(improved)} characters")
-            if file_id:
-                save_improvement_analysis(original_text, improved, "Simulation mode - No API key", file_id)
-            return improved
+            # Simulation mode for JSON not fully implemented, returning basic structure
+            return {
+                "header": {"name": "Simulation User", "email": "sim@example.com"},
+                "skills": "Simulation, Mode, Only"
+            }
         
         logger.info("Initializing Gemini model...")
-        # Use Gemini model - gemini-2.5-flash is the stable fast model
-        model_name = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+        model_name = os.getenv("LLM_MODEL", "gemini-1.5-flash")
         logger.info(f"Using model: {model_name}")
         
+        # Configure model with JSON response type
         model = genai.GenerativeModel(
             model_name=model_name,
             generation_config={
                 "temperature": 0.7,
-                "max_output_tokens": 8000,
-            },
-            safety_settings=[
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ]
+                "response_mime_type": "application/json"
+            }
         )
         
-        # First, get improvement suggestions in bullet points
-        analysis_prompt = f"""Analyze this resume and provide a bullet-point list of the key improvements you will make.
-Focus on:
-- Grammar and language improvements
-- Action verbs and stronger wording
-- Clarity and conciseness enhancements
-- ATS optimization suggestions
-- Professional tone adjustments
+        prompt = f"""
+        You are an expert Resume Writer. 
+        1. Parse the following resume text.
+        2. IMPROVE the content: Use strong action verbs, quantify results, fix grammar.
+        3. Return a JSON Object with this exact schema:
+        {{
+            "header": {{ "name": "...", "email": "...", "phone": "...", "linkedin": "..." }},
+            "education": [ {{ "school": "...", "degree": "...", "location": "...", "date": "..." }} ],
+            "experience": [ {{ "company": "...", "role": "...", "location": "...", "date": "...", "bullets": ["...", "..."] }} ],
+            "skills": "Skill 1, Skill 2, Skill 3"
+        }}
+        
+        RAW TEXT:
+        {original_text}
+        """
 
-Original Resume:
-{original_text}
-
-Provide ONLY a bullet-point list of specific improvements."""
-
-        logger.info("📊 Step 1: Generating improvement analysis...")
+        logger.info(f"🚀 Sending improvement request to Gemini...")
+        
+        # Run blocking API call in thread pool
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            _executor, model.generate_content, prompt
+        )
+        
+        logger.info("✓ Received response from Gemini")
+        
+        # Parse JSON
         try:
-            analysis_response = model.generate_content(analysis_prompt)
-            improvement_suggestions = analysis_response.text if analysis_response else "No suggestions generated"
-            logger.info(f"✓ Analysis complete. Suggestions length: {len(improvement_suggestions)} characters")
-            logger.info(f"Suggestions preview: {improvement_suggestions[:200]}")
-        except Exception as analysis_error:
-            logger.error(f"✗ Analysis failed: {str(analysis_error)}")
-            improvement_suggestions = f"Analysis failed: {str(analysis_error)}"
-        
-        # Get template-specific system prompt
-        logger.info(f"📝 Step 2: Loading template '{template_id}'...")
-        template = get_template(template_id)
-        template_prompt = template.get_system_prompt()
-        logger.info(f"✓ Template loaded. Prompt length: {len(template_prompt)} characters")
-        
-        # Then, get the improved resume
-        prompt = f"{template_prompt}\n\nImprove this resume:\n\n{original_text}"
-        logger.info(f"🚀 Step 3: Sending improvement request to Gemini...")
-        logger.info(f"   Total prompt length: {len(prompt)} characters")
-        logger.info(f"   Model: {model_name}")
-        logger.info(f"   Temperature: 0.7")
-        logger.info(f"   Max tokens: 8000")
-        
-        try:
-            response = model.generate_content(prompt)
-            logger.info("✓ Received response from Gemini")
-            
-            improved_text = response.text
-            logger.info(f"✓ Improved text length: {len(improved_text) if improved_text else 0} characters")
-            logger.info(f"   Original length: {len(original_text)} characters")
-            logger.info(f"   Change: {len(improved_text) - len(original_text):+d} characters")
-            logger.info(f"Improved text preview (first 300 chars):\n{improved_text[:300]}")
-            
-            # Check if text actually changed
-            if improved_text.strip() == original_text.strip():
-                logger.warning("⚠️ WARNING: Improved text is IDENTICAL to original text!")
-                logger.warning("   This suggests the AI did not make any changes.")
-            elif len(improved_text) < len(original_text) * 0.8:
-                logger.warning("⚠️ WARNING: Improved text is significantly SHORTER than original!")
-            else:
-                logger.info("✓ Text was successfully improved")
-                
-        except Exception as improvement_error:
-            logger.error(f"✗ Improvement request failed: {str(improvement_error)}")
-            raise
-        
-        # Save improvement analysis to file
+            data = json.loads(response.text)
+            logger.info("✓ JSON parsed successfully")
+        except Exception:
+            # Fallback if Gemini adds extra formatting
+            logger.warning("⚠️ JSON parsing failed, attempting cleanup...")
+            clean_text = response.text.replace("```json", "").replace("```", "")
+            data = json.loads(clean_text)
+            logger.info("✓ JSON parsed after cleanup")
+
+        # Save debug output
         if file_id:
-            logger.info(f"💾 Saving improvement analysis to file...")
-            save_improvement_analysis(original_text, improved_text, improvement_suggestions, file_id)
-        
-        final_text = improved_text.strip() if improved_text else original_text
-        logger.info("=" * 80)
-        logger.info("✓ RESUME IMPROVEMENT COMPLETED SUCCESSFULLY")
-        logger.info(f"   Final text length: {len(final_text)} characters")
-        logger.info("=" * 80)
-        return final_text
-        
+            output_path = f"backend/outputs/{file_id}_data.json"
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+            logger.info(f"Debug JSON saved to: {output_path}")
+
+        return data
+
     except Exception as e:
-        logger.error("=" * 80)
-        logger.error(f"✗ AI SERVICE ERROR: {str(e)}")
-        logger.error("=" * 80)
-        logger.error("Full error details:", exc_info=True)
-        logger.warning("⚠️ Falling back to simulation mode...")
-        
-        improved = simulate_improvement(original_text)
-        logger.info(f"Simulation result length: {len(improved)} characters")
-        
-        if file_id:
-            save_improvement_analysis(original_text, improved, f"ERROR: {str(e)}\n\nFell back to simulation mode", file_id)
-        
-        logger.info("=" * 80)
-        logger.warning("⚠️ COMPLETED WITH SIMULATION MODE (LIMITED IMPROVEMENTS)")
-        logger.warning("   To get full Harvard CV formatting with AI:")
-        logger.warning("   1. Get a new API key from https://makersuite.google.com/app/apikey")
-        logger.warning("   2. Update .env file with new key")
-        logger.warning("   3. Restart backend")
-        logger.info("=" * 80)
-        return improved
+        logger.error(f"✗ AI SERVICE ERROR: {str(e)}", exc_info=True)
+        raise
 
 def save_improvement_analysis(original_text: str, improved_text: str, suggestions: str, file_id: str):
     """Save improvement analysis and suggestions to a file."""

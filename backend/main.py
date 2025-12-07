@@ -8,6 +8,12 @@ import uuid
 import logging
 from typing import Optional
 from dotenv import load_dotenv
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+# Thread pool for running blocking operations without freezing the event loop
+# This allows multiple requests to be processed concurrently
+executor = ThreadPoolExecutor(max_workers=4)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,11 +22,16 @@ from backend.services.pdf_service import extract_text_from_pdf, generate_improve
 from backend.services.ai_service import improve_resume_text
 from backend.services.templates import list_templates, get_template
 
-# Configure logging
+# Configure logging with explicit stream handler to ensure console output
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()  # Force output to console
+    ]
 )
+# Set level for all backend loggers
+logging.getLogger("backend").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Log environment configuration on startup
@@ -128,7 +139,11 @@ async def upload_resume(
             "progress": 40
         }
         
-        original_text = extract_text_from_pdf(original_path)
+        # Run blocking PDF extraction in thread pool to avoid blocking event loop
+        loop = asyncio.get_event_loop()
+        original_text = await loop.run_in_executor(
+            executor, extract_text_from_pdf, original_path
+        )
         logger.info(f"✓ Text extraction complete")
         logger.info(f"   Extracted length: {len(original_text)} characters")
         logger.info(f"   Preview (first 200 chars): {original_text[:200]}")
@@ -143,7 +158,7 @@ async def upload_resume(
             raise HTTPException(status_code=400, detail="Could not extract text from PDF")
         
         logger.info("=" * 80)
-        logger.info("STEP 2: AI IMPROVEMENT")
+        logger.info("STEP 2: AI IMPROVEMENT (JSON MODE)")
         logger.info(f"   Template: {template_id}")
         logger.info("=" * 80)
         
@@ -153,25 +168,19 @@ async def upload_resume(
             "progress": 60
         }
         
-        improved_text = await improve_resume_text(original_text, file_id, template_id)
+        # improved_data is now a dict (JSON)
+        improved_data = await improve_resume_text(original_text, file_id, template_id)
+        
         logger.info("=" * 80)
         logger.info("✓ AI improvement complete")
-        logger.info(f"   Original length: {len(original_text)} characters")
-        logger.info(f"   Improved length: {len(improved_text)} characters")
-        logger.info(f"   Difference: {len(improved_text) - len(original_text):+d} characters")
-        
-        # Check if texts are identical
-        if original_text.strip() == improved_text.strip():
-            logger.warning("⚠️⚠️⚠️ WARNING: ORIGINAL AND IMPROVED TEXT ARE IDENTICAL! ⚠️⚠️⚠️")
-            logger.warning("   This indicates the AI improvement did not work!")
-        else:
-            logger.info("✓ Text was successfully modified")
+        logger.info(f"   Data keys: {list(improved_data.keys())}")
         
         # Save debug output
-        debug_path = os.path.join(OUTPUT_DIR, f"{file_id}_debug.txt")
+        debug_path = os.path.join(OUTPUT_DIR, f"{file_id}_debug.json")
+        import json
         with open(debug_path, "w", encoding="utf-8") as f:
-            f.write(improved_text)
-        logger.info(f"Debug text saved to: {debug_path}")
+            json.dump(improved_data, f, indent=2)
+        logger.info(f"Debug JSON saved to: {debug_path}")
         logger.info("=" * 80)
         
         progress_store[file_id] = {
@@ -182,7 +191,11 @@ async def upload_resume(
         
         improved_path = os.path.join(OUTPUT_DIR, f"{file_id}_improved.pdf")
         logger.info(f"Generating improved PDF at {improved_path}")
-        generate_improved_pdf(improved_text, improved_path, template_id)
+        
+        # Run blocking PDF generation in thread pool
+        await loop.run_in_executor(
+            executor, generate_improved_pdf, improved_data, improved_path, template_id
+        )
         logger.info("Improved PDF generated successfully")
         
         progress_store[file_id] = {
@@ -196,7 +209,7 @@ async def upload_resume(
             "original_filename": file.filename,
             "timestamp": timestamp,
             "original_text": original_text,
-            "improved_text": improved_text,
+            "improved_data": improved_data, # Return JSON data instead of text
             "download_url": f"/api/download/{file_id}"
         }
     

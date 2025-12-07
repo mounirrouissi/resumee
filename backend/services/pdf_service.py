@@ -24,8 +24,8 @@ def get_paddle_ocr():
     global _ocr_instance
     if _ocr_instance is None:
         logger.info("Initializing PaddleOCR...")
-        # Note: Simplified initialization for compatibility with newer PaddleOCR versions
         try:
+            # Use minimal parameters for maximum compatibility
             _ocr_instance = PaddleOCR(lang='en')
             logger.info("PaddleOCR initialized successfully")
         except Exception as e:
@@ -42,32 +42,18 @@ def extract_text_with_paddle_ocr(pdf_path: str) -> tuple[str, bool]:
     try:
         logger.info("Attempting text extraction with PaddleOCR (Resume-optimized)...")
         
-        # Convert PDF to images with higher DPI for better quality
-        images = convert_from_path(pdf_path, dpi=300)
-        logger.info(f"Converted PDF to {len(images)} images at 300 DPI")
+        # Convert PDF to images - use 200 DPI for balance of speed vs quality 
+        # (300 DPI is overkill and 3x slower)
+        images = convert_from_path(pdf_path, dpi=200)
+        logger.info(f"Converted PDF to {len(images)} images at 200 DPI")
         
         ocr = get_paddle_ocr()
         all_text = []
         
         for i, image in enumerate(images):
-            # Convert PIL image to numpy array
+            # Convert PIL image to numpy array (use RGB directly, no preprocessing)
+            # PaddleOCR works best with clean color images
             img_array = np.array(image)
-            
-            # Preprocess image for better OCR (especially for resumes with watermarks, backgrounds)
-            # Convert to grayscale for better text detection
-            if len(img_array.shape) == 3:
-                gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-            else:
-                gray = img_array
-            
-            # Apply adaptive thresholding to improve text clarity
-            # This helps with resumes that have background colors or watermarks
-            binary = cv2.adaptiveThreshold(
-                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
-            )
-            
-            # Denoise the image
-            denoised = cv2.fastNlMeansDenoising(binary, None, 10, 7, 21)
             
             # Try original image first (works better for clean PDFs)
             logger.info(f"Page {i+1}: Processing with original image...")
@@ -77,32 +63,73 @@ def extract_text_with_paddle_ocr(pdf_path: str) -> tuple[str, bool]:
                 logger.warning(f"Page {i+1}: OCR error on original image: {str(ocr_error)}")
                 result = None
             
-            # If result is poor, try with preprocessed image
+            # If result is poor, try with grayscale image (simpler preprocessing, still fast)
             if not result or not result[0] or len(result[0]) < 5:
-                logger.info(f"Page {i+1}: Retrying with preprocessed image...")
+                logger.info(f"Page {i+1}: Retrying with grayscale image...")
                 try:
-                    result = ocr.ocr(denoised)
+                    # Simple grayscale conversion as fallback
+                    if len(img_array.shape) == 3:
+                        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+                        # Convert back to 3 channels for PaddleOCR
+                        gray_3ch = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+                        result = ocr.ocr(gray_3ch)
+                    else:
+                        result = ocr.ocr(img_array)
                 except Exception as ocr_error:
-                    logger.warning(f"Page {i+1}: OCR error on preprocessed image: {str(ocr_error)}")
+                    logger.warning(f"Page {i+1}: OCR error on grayscale image: {str(ocr_error)}")
                     result = None
             
             if result and result[0]:
                 page_text = []
                 
+                # Debug: Log the raw result structure to understand the format
+                if result[0] and len(result[0]) > 0:
+                    sample = result[0][0]
+                    logger.info(f"Page {i+1}: OCR result sample structure: {type(sample)}, len={len(sample) if hasattr(sample, '__len__') else 'N/A'}")
+                    if len(result[0]) > 0:
+                        logger.info(f"Page {i+1}: Sample item: {str(sample)[:200]}")
+                
                 # Sort by vertical position (top to bottom) then horizontal (left to right)
                 # This helps maintain proper reading order in multi-column resumes
-                sorted_lines = sorted(result[0], key=lambda x: (x[0][0][1], x[0][0][0]))
+                try:
+                    sorted_lines = sorted(result[0], key=lambda x: (x[0][0][1], x[0][0][0]))
+                except (IndexError, TypeError) as sort_error:
+                    logger.warning(f"Page {i+1}: Could not sort lines, using original order: {sort_error}")
+                    sorted_lines = result[0]
                 
                 for line in sorted_lines:
-                    if line[1][0]:  # text content
-                        text = line[1][0].strip()
-                        confidence = line[1][1]
+                    try:
+                        # Handle different PaddleOCR result formats defensively
+                        # Format can be: [[box], (text, confidence)] or [[box], [text, confidence]]
+                        if not line or len(line) < 2:
+                            continue
+                        
+                        text_data = line[1]
+                        if isinstance(text_data, (list, tuple)) and len(text_data) >= 2:
+                            text = str(text_data[0]).strip() if text_data[0] else ""
+                            confidence = float(text_data[1]) if text_data[1] else 0.0
+                        elif isinstance(text_data, str):
+                            text = text_data.strip()
+                            confidence = 1.0  # Assume high confidence if not provided
+                        else:
+                            continue
                         
                         # Only include text with reasonable confidence (>0.5)
-                        if confidence > 0.5:
+                        if text and confidence > 0.5:
                             page_text.append(text)
-                        else:
+                        elif text:
                             logger.debug(f"Skipped low-confidence text: {text} (confidence: {confidence:.2f})")
+                    except (IndexError, TypeError, ValueError) as line_error:
+                        logger.debug(f"Page {i+1}: Skipped malformed line: {line_error}")
+                
+                # Check if we're getting single characters (PaddleOCR character-level output)
+                # If so, try to group them into words based on horizontal proximity
+                if page_text and all(len(t) <= 2 for t in page_text[:20]):
+                    logger.warning(f"Page {i+1}: Detected character-level output, grouping into words...")
+                    # Join consecutive single characters (this is a fallback)
+                    grouped_text = ' '.join(page_text)
+                    page_text = [grouped_text]
+                    logger.info(f"Page {i+1}: Grouped text sample: {grouped_text[:100]}")
                 
                 page_content = '\n'.join(page_text)
                 all_text.append(page_content)
@@ -112,6 +139,11 @@ def extract_text_with_paddle_ocr(pdf_path: str) -> tuple[str, bool]:
         
         extracted = '\n\n'.join(all_text)
         logger.info(f"PaddleOCR extraction complete. Total: {len(extracted)} characters")
+        
+        # Final check: warn if extraction seems poor
+        if len(extracted) < 100:
+            logger.warning(f"⚠️ OCR extracted very little content ({len(extracted)} chars). This PDF may need special handling.")
+        
         return extracted, True
         
     except Exception as e:
@@ -243,56 +275,113 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         logger.error(f"Error extracting text from PDF: {str(e)}", exc_info=True)
         raise Exception(f"Error extracting text from PDF: {str(e)}")
 
-def generate_improved_pdf(text: str, output_path: str, template_id: str = "professional"):
+from fpdf import FPDF
+
+# --- HELPER: HARVARD PDF GENERATOR ---
+class HarvardPDF(FPDF):
+    def sanitize(self, text):
+        """Sanitize text to be compatible with FPDF latin-1 encoding."""
+        if not text: return ""
+        # Replace common incompatible characters
+        replacements = {
+            '\u2013': '-',  # en-dash
+            '\u2014': '-',  # em-dash
+            '\u2018': "'",  # left single quote
+            '\u2019': "'",  # right single quote
+            '\u201c': '"',  # left double quote
+            '\u201d': '"',  # right double quote
+            '\u2022': '-',  # bullet
+        }
+        for char, replacement in replacements.items():
+            text = text.replace(char, replacement)
+            
+        # Final safety net: encode to latin-1, replacing errors
+        return str(text).encode('latin-1', 'replace').decode('latin-1')
+
+    def header_section(self, data):
+        self.set_font("Times", "B", 24)
+        name = data.get("name", "Name")
+        if not name: name = "Name"
+        self.cell(0, 10, self.sanitize(name).upper(), align="C", ln=True)
+        
+        self.set_font("Times", "", 10)
+        parts = [data.get("email"), data.get("phone"), data.get("linkedin")]
+        contact = " | ".join([p for p in parts if p])
+        self.cell(0, 5, self.sanitize(contact), align="C", ln=True)
+        self.ln(5)
+
+    def section_title(self, title):
+        self.set_font("Times", "B", 12)
+        self.cell(0, 6, self.sanitize(title).upper(), ln=True)
+        self.line(self.get_x(), self.get_y(), 190, self.get_y())
+        self.ln(2)
+
+    def add_education(self, edu_list):
+        if not edu_list: return
+        self.section_title("Education")
+        for item in edu_list:
+            self.set_font("Times", "B", 11)
+            self.cell(100, 5, self.sanitize(item.get("school", "")), align="L")
+            self.set_font("Times", "", 11)
+            self.cell(0, 5, self.sanitize(item.get("location", "")), align="R", ln=True)
+            self.set_font("Times", "I", 11)
+            self.cell(100, 5, self.sanitize(item.get("degree", "")), align="L")
+            self.set_font("Times", "", 11)
+            self.cell(0, 5, self.sanitize(item.get("date", "")), align="R", ln=True)
+            self.ln(3)
+
+    def add_experience(self, exp_list):
+        if not exp_list: return
+        self.section_title("Experience")
+        for item in exp_list:
+            self.set_font("Times", "B", 11)
+            self.cell(100, 5, self.sanitize(item.get("company", "")), align="L")
+            self.set_font("Times", "", 11)
+            self.cell(0, 5, self.sanitize(item.get("location", "")), align="R", ln=True)
+            self.set_font("Times", "I", 11)
+            self.cell(100, 5, self.sanitize(item.get("role", "")), align="L")
+            self.set_font("Times", "", 11)
+            self.cell(0, 5, self.sanitize(item.get("date", "")), align="R", ln=True)
+            
+            self.set_font("Times", "", 10)
+            for bullet in item.get("bullets", []):
+                safe_bullet = self.sanitize(bullet)
+                self.cell(5) 
+                self.cell(3)
+                self.multi_cell(0, 5, f"- {safe_bullet}")
+            self.ln(4)
+
+    def add_skills(self, skills_text):
+        if not skills_text: return
+        self.section_title("Skills")
+        self.set_font("Times", "", 10)
+        # Handle string vs list
+        if isinstance(skills_text, list):
+            skills_text = ", ".join(skills_text)
+        
+        safe_text = self.sanitize(skills_text)
+        self.multi_cell(0, 5, safe_text)
+        self.ln(5)
+
+def generate_improved_pdf(data: dict, output_path: str, template_id: str = "professional"):
     """
-    Generate ATS-optimized PDF resume following professional standards.
-    Uses formatting markers if present, otherwise falls back to simple parsing.
+    Generate ATS-optimized PDF resume using FPDF and Harvard style.
     """
     try:
-        from backend.services.templates import get_template
-        from backend.services.pdf_formatter import generate_pdf_from_formatted_text, PDFFormatter
+        logger.info(f"Generating PDF at: {output_path}")
         
-        logger.info(f"Generating PDF with template '{template_id}' at: {output_path}")
-        template = get_template(template_id)
-        template_styles = template.get_styles()
+        pdf = HarvardPDF()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
         
-        # Log first part of text for debugging
-        logger.info(f"First 500 chars of AI text: {text[:500]}")
+        # Safely get data with defaults
+        if "header" in data: pdf.header_section(data["header"])
+        if "education" in data: pdf.add_education(data["education"])
+        if "experience" in data: pdf.add_experience(data["experience"])
+        if "skills" in data: pdf.add_skills(data["skills"])
         
-        # Check if text has formatting markers
-        formatter = PDFFormatter(template_styles)
-        has_markers = formatter.has_formatting_markers(text)
-        
-        # Detailed marker detection logging
-        logger.info("=" * 80)
-        logger.info("MARKER DETECTION")
-        logger.info("=" * 80)
-        markers_to_check = ['[TITLE:', '[CONTACT:', '[SECTION:', '[SUBSECTION:', 
-                           '[DATE:', '[BULLET:', '[PARAGRAPH]', '[SPACING]', '[BOLD:']
-        for marker in markers_to_check:
-            count = text.count(marker)
-            if count > 0:
-                logger.info(f"✓ Found {count} instances of {marker}")
-            else:
-                logger.info(f"✗ Missing: {marker}")
-        logger.info("=" * 80)
-        
-        if has_markers:
-            logger.info("✓ Using advanced PDF formatter with markers")
-            generate_pdf_from_formatted_text(text, output_path, template_styles)
-            return
-        
-        # Fallback for text without markers (e.g. from simulation mode or AI failure)
-        logger.warning("⚠️ No formatting markers found - applying default formatting")
-        
-        # Create a basic structure
-        fallback_text = f"""[TITLE: Resume]
-[SECTION: SUMMARY]
-[PARAGRAPH]
-{text}
-"""
-        generate_pdf_from_formatted_text(fallback_text, output_path, template_styles)
-        return
+        pdf.output(output_path)
+        logger.info("✓ PDF generated successfully")
         
     except Exception as e:
         logger.error(f"Error generating PDF: {str(e)}", exc_info=True)

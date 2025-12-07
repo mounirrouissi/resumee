@@ -21,4 +21,5 @@ dependencies = [
     "uvicorn>=0.38.0",
     "stripe>=14.0.1",
     "python-docx>=1.2.0",
+    "fpdf>=1.7.2",
 ]
