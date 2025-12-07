@@ -166,14 +166,13 @@ async def improve_resume_text(original_text: str, file_id: str = None, template_
         
         # Parse JSON
         try:
-            data = json.loads(response.text)
-            logger.info("✓ JSON parsed successfully")
-        except Exception:
-            # Fallback if Gemini adds extra formatting
-            logger.warning("⚠️ JSON parsing failed, attempting cleanup...")
-            clean_text = response.text.replace("```json", "").replace("```", "")
-            data = json.loads(clean_text)
-            logger.info("✓ JSON parsed after cleanup")
+            import json_repair
+            data = json_repair.loads(response.text)
+            logger.info("✓ JSON parsed successfully with json_repair")
+        except Exception as e:
+            logger.error(f"✗ JSON parsing failed even with json_repair: {str(e)}")
+            logger.error(f"Raw response: {response.text[:500]}...") # Log first 500 chars
+            raise ValueError(f"Failed to parse AI response: {str(e)}")
 
         # Save debug output
         if file_id:
