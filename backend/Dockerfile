@@ -1,9 +1,9 @@
-# 1. Use Python 3.10 (More stable package repositories than 3.9)
-FROM python:3.10-slim
+# 1. Use 'bullseye' (Debian 11) which supports the graphics libraries we need
+FROM python:3.10-bullseye
 
 # 2. Install System Dependencies
-# We added 'libglib2.0-0' and '--fix-missing' to prevent the Exit Code 100 error
-RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
+# We use -y to say 'yes' to prompts automatically
+RUN apt-get update && apt-get install -y \
     poppler-utils \
     libgl1-mesa-glx \
     libglib2.0-0 \
