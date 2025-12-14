@@ -1,9 +1,10 @@
 fastapi
 uvicorn
 python-multipart
-python-dotenv
+paddlepaddle
+paddleocr
+pdf2image
 google-generativeai
-pydantic
-requests
 fpdf
-json_repair
+numpy
+opencv-python-headless
