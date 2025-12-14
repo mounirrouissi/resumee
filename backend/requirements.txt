@@ -8,6 +8,7 @@ google-generativeai
 fpdf
 numpy
 opencv-python-headless
-dotenv
 pytesseract
 PyPDF2
+reportlab
+json_repair
