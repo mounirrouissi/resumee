@@ -1,8 +1,7 @@
-# 1. Use 'bullseye' (Debian 11) which supports the graphics libraries we need
+# 1. Use 'bullseye' (Debian 11) for stability with graphics libraries
 FROM python:3.10-bullseye
 
 # 2. Install System Dependencies
-# We use -y to say 'yes' to prompts automatically
 RUN apt-get update && apt-get install -y \
     poppler-utils \
     libgl1-mesa-glx \
@@ -20,10 +19,10 @@ RUN pip install --no-cache-dir --upgrade pip
 # Install PaddlePaddle CPU (specific version for stability)
 RUN pip install --no-cache-dir paddlepaddle==2.6.0 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
 
-# Install the rest
-RUN pip install --no-ca1che-dir -r requirements.txt
+# Install the rest (Fixed the typo here)
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy App Code.
+# 5. Copy App Code
 COPY . .
 
 # 6. Expose Port
