@@ -8,3 +8,4 @@ google-generativeai
 fpdf
 numpy
 opencv-python-headless
+dotenv
