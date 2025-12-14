@@ -12,3 +12,4 @@ pytesseract
 PyPDF2
 reportlab
 json_repair
+dotenv
