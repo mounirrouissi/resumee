@@ -9,3 +9,4 @@ fpdf
 numpy
 opencv-python-headless
 dotenv
+pytesseract
