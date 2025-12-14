@@ -21,9 +21,9 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir paddlepaddle==2.6.0 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
 
 # Install the rest
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-ca1che-dir -r requirements.txt
 
-# 5. Copy App Code
+# 5. Copy App Code.
 COPY . .
 
 # 6. Expose Port

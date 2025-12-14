@@ -367,7 +367,7 @@ def generate_pdf_from_formatted_text(text: str, output_path: str, template_style
     else:
         logger.warning("⚠️ No formatting markers found - falling back to simple rendering")
         # Fall back to simple rendering (existing method)
-        from backend.services.pdf_service import generate_improved_pdf
+        from services.pdf_service import generate_improved_pdf
         generate_improved_pdf(text, output_path, "professional")
     
     logger.info("=" * 80)

@@ -18,9 +18,9 @@ executor = ThreadPoolExecutor(max_workers=4)
 # Load environment variables from .env file
 load_dotenv()
 
-from backend.services.pdf_service import extract_text_from_pdf, generate_improved_pdf
-from backend.services.ai_service import improve_resume_text
-from backend.services.templates import list_templates, get_template
+from services.pdf_service import extract_text_from_pdf, generate_improved_pdf
+from services.ai_service import improve_resume_text
+from services.templates import list_templates, get_template
 
 # Configure logging with explicit stream handler to ensure console output
 logging.basicConfig(
@@ -246,7 +246,7 @@ async def download_resume(file_id: str):
     )
 
 from pydantic import BaseModel
-from backend.services.revenue_cat_service import revenue_cat_service
+from services.revenue_cat_service import revenue_cat_service
 
 class GeneratePDFRequest(BaseModel):
     file_id: str

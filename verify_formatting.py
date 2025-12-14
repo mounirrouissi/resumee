@@ -1,7 +1,7 @@
 
 import os
-from backend.services.pdf_formatter import generate_pdf_from_formatted_text
-from backend.services.templates import get_template
+from services.pdf_formatter import generate_pdf_from_formatted_text
+from services.templates import get_template
 
 def verify_formatting():
     # Sample text with new markers

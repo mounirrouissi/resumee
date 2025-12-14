@@ -4,7 +4,7 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from backend.services.templates import get_template
+from services.templates import get_template
 
 # Thread pool for running blocking Gemini API calls
 _executor = ThreadPoolExecutor(max_workers=4)
