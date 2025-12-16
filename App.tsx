@@ -14,8 +14,18 @@ import { UserProvider, useUser } from "@/contexts/UserContext";
 import { CreditsProvider } from "@/contexts/CreditsContext";
 import { RevenueCatProvider } from "@/contexts/RevenueCatContext";
 
+import OnboardingScreen from "@/screens/OnboardingScreen";
+
 function AppContent() {
-  const { isAuthenticated } = useUser();
+  const { isAuthenticated, hasSeenOnboarding, isLoading } = useUser();
+
+  if (isLoading) {
+    return null; // Or a loading spinner
+  }
+
+  if (!hasSeenOnboarding) {
+    return <OnboardingScreen />;
+  }
 
   return (
     <NavigationContainer>

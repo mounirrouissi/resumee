@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type UserType = "guest" | "google";
 
@@ -20,6 +21,9 @@ type UserContextType = {
   signInWithGoogle: (profile: UserProfile) => void;
   continueAsGuest: () => void;
   signOut: () => void;
+  hasSeenOnboarding: boolean;
+  isLoading: boolean;
+  completeOnboarding: () => void;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -30,6 +34,34 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [displayName, setDisplayName] = useState("Resume User");
   const [avatarUri, setAvatarUri] = useState("");
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const value = await AsyncStorage.getItem("HAS_SEEN_ONBOARDING");
+      if (value !== null) {
+        setHasSeenOnboarding(true);
+      }
+    } catch (e) {
+      console.error("Failed to fetch onboarding status", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const completeOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem("HAS_SEEN_ONBOARDING", "true");
+      setHasSeenOnboarding(true);
+    } catch (e) {
+      console.error("Failed to save onboarding status", e);
+    }
+  };
 
   const signInWithGoogle = (profile: UserProfile) => {
     setIsAuthenticated(true);
@@ -68,6 +100,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         continueAsGuest,
         signOut,
+        hasSeenOnboarding,
+        isLoading,
+        completeOnboarding,
       }}
     >
       {children}

@@ -53,7 +53,7 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "dummy_id_to_prevent_crash",
   });
 
   useEffect(() => {
@@ -115,14 +115,18 @@ export default function LoginScreen() {
         colors={colorScheme === "dark" ? ["#0F0F1A", "#1A1A2E", "#16162A"] : ["#FAFAFA", "#F3F4F6", "#EEF2FF"]}
         style={StyleSheet.absoluteFill}
       />
-      <Animated.View style={[styles.orb, styles.orb1, { backgroundColor: theme.primary, transform: [
-        { translateY: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) },
-        { translateX: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }) },
-      ]}]} />
-      <Animated.View style={[styles.orb, styles.orb2, { backgroundColor: theme.accent, transform: [
-        { translateY: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -50] }) },
-        { translateX: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -30] }) },
-      ]}]} />
+      <Animated.View style={[styles.orb, styles.orb1, {
+        backgroundColor: theme.primary, transform: [
+          { translateY: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) },
+          { translateX: orb1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }) },
+        ]
+      }]} />
+      <Animated.View style={[styles.orb, styles.orb2, {
+        backgroundColor: theme.accent, transform: [
+          { translateY: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -50] }) },
+          { translateX: orb2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -30] }) },
+        ]
+      }]} />
 
       <View style={[styles.content, { paddingTop: insets.top + Spacing["3xl"] }]}>
         <Animated.View style={[styles.logoSection, { opacity: fadeAnim, transform: [{ scale: logoScaleAnim }] }]}>

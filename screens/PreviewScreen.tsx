@@ -5,6 +5,7 @@ import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import * as StoreReview from 'expo-store-review';
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
@@ -26,7 +27,7 @@ export default function PreviewScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { getResumeById } = useResumes();
   const insets = useSafeAreaInsets();
-  
+
   // Download states
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -133,7 +134,7 @@ export default function PreviewScreen() {
           setDownloadProgress(i);
           await new Promise(r => setTimeout(r, 100));
         }
-        
+
         // Try to download, if 404 the backend will handle it
         const response = await fetch(downloadUrl);
         if (response.ok) {
@@ -141,7 +142,7 @@ export default function PreviewScreen() {
         } else {
           throw new Error('Failed to download PDF');
         }
-        
+
         setDownloadSuccess(true);
         setTimeout(() => setDownloadSuccess(false), 3000);
         return;
@@ -149,7 +150,7 @@ export default function PreviewScreen() {
 
       // For mobile, first check if file exists
       const checkResponse = await fetch(downloadUrl, { method: 'HEAD' });
-      
+
       if (!checkResponse.ok) {
         throw new Error('PDF not ready. Please try again.');
       }
@@ -168,15 +169,26 @@ export default function PreviewScreen() {
       const result = await downloadResumable.downloadAsync();
       if (!result || result.status !== 200) throw new Error('Download failed');
 
-      setDownloadProgress(100);
       setDownloadSuccess(true);
 
       // Haptic feedback would go here if using expo-haptics
-      
+
+      // Ask for review if available
+      if (Platform.OS !== 'web' && await StoreReview.hasAction()) {
+        // Tiny delay to let the success animation complete first
+        setTimeout(async () => {
+          try {
+            await StoreReview.requestReview();
+          } catch (e) {
+            console.log("Review request failed", e);
+          }
+        }, 1000);
+      }
+
       setTimeout(async () => {
         if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(result.uri, { 
-            mimeType: 'application/pdf', 
+          await Sharing.shareAsync(result.uri, {
+            mimeType: 'application/pdf',
             UTI: 'com.adobe.pdf',
             dialogTitle: 'Share Your CV'
           });
@@ -184,7 +196,7 @@ export default function PreviewScreen() {
           Alert.alert('Success', 'CV saved to documents directory');
         }
         setDownloadSuccess(false);
-      }, 1500);
+      }, 2000); // Increased delay slightly to accommodate potential review popup
 
     } catch (error: any) {
       Alert.alert('Download Error', error.message || 'Failed to download PDF. Please try again.');
@@ -218,14 +230,14 @@ export default function PreviewScreen() {
 
       // On mobile, download the PDF first, then share it
       const fileUri = FileSystem.documentDirectory + 'CV.pdf';
-      
+
       // Always download fresh copy for sharing
       const downloadResumable = FileSystem.createDownloadResumable(
         downloadUrl,
         fileUri
       );
       const result = await downloadResumable.downloadAsync();
-      
+
       if (!result || result.status !== 200) {
         throw new Error('Failed to download PDF for sharing');
       }
@@ -358,18 +370,18 @@ export default function PreviewScreen() {
           <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
         )}
         <View style={[styles.downloadContainerInner, Platform.OS !== 'ios' && { backgroundColor: theme.backgroundDefault, borderTopWidth: 1, borderTopColor: theme.border }]}>
-          
+
           {/* Progress bar background */}
           {isDownloading && (
             <View style={styles.progressBarContainer}>
-              <Animated.View 
+              <Animated.View
                 style={[
-                  styles.progressBar, 
-                  { 
+                  styles.progressBar,
+                  {
                     backgroundColor: theme.primary + '30',
                     width: progressWidth,
                   }
-                ]} 
+                ]}
               />
             </View>
           )}
@@ -384,12 +396,12 @@ export default function PreviewScreen() {
             >
               <LinearGradient
                 colors={
-                  downloadSuccess 
-                    ? [theme.success, theme.success] 
+                  downloadSuccess
+                    ? [theme.success, theme.success]
                     : isDownloading
                       ? [theme.primary + 'CC', theme.primary + 'CC']
-                      : colorScheme === 'dark' 
-                        ? Gradients.dark.primary 
+                      : colorScheme === 'dark'
+                        ? Gradients.dark.primary
                         : Gradients.light.primary
                 }
                 start={{ x: 0, y: 0 }}
@@ -426,12 +438,12 @@ const styles = StyleSheet.create({
   actionsContainer: { gap: Spacing.md },
   actionCard: { flexDirection: 'row', alignItems: 'center', padding: Spacing.lg, borderRadius: BorderRadius.lg, borderWidth: 1 },
   actionIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
-  
+
   // Enhanced download button styles
-  downloadContainer: { 
-    position: 'absolute', 
-    bottom: 0, 
-    left: 0, 
+  downloadContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
     right: 0,
     overflow: 'hidden',
   },
@@ -452,16 +464,16 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 2,
   },
-  downloadButton: { 
-    height: 60, 
-    borderRadius: BorderRadius.lg, 
+  downloadButton: {
+    height: 60,
+    borderRadius: BorderRadius.lg,
     overflow: 'hidden',
     ...Shadows.glow,
   },
-  downloadGradient: { 
-    flex: 1, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  downloadGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
   },
