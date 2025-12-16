@@ -70,7 +70,15 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 progress_store = {}
 
 from fastapi.staticfiles import StaticFiles
-app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+
+# Get absolute path to the backend directory
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BACKEND_DIR, "static")
+
+# Ensure static directory exists
+os.makedirs(STATIC_DIR, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/")
 async def root():

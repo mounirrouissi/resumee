@@ -1,6 +1,11 @@
 import Constants from 'expo-constants';
 
 const getBaseUrl = () => {
+  // Check for environment variable first
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
   // For web execution
   if (typeof window !== 'undefined' && window.location) {
     const hostname = window.location.hostname;
