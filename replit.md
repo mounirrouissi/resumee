@@ -1,4 +1,4 @@
-# Resume Improver App - Replit Migration
+# Resumax App - Replit Migration
 
 ## Project Overview
 An AI-powered mobile and web application that analyzes and improves resumes/CVs using Google's Gemini AI.

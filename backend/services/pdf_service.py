@@ -290,13 +290,14 @@ class HarvardPDF(FPDF):
             '\u2019': "'",  # right single quote
             '\u201c': '"',  # left double quote
             '\u201d': '"',  # right double quote
-            '\u2022': '-',  # bullet
+            # '\u2022': '-',  # bullet (removed replacement)
         }
         for char, replacement in replacements.items():
             text = text.replace(char, replacement)
             
-        # Final safety net: encode to latin-1, replacing errors
-        return str(text).encode('latin-1', 'replace').decode('latin-1')
+        # Final safety net: encode to cp1252 (supports bullets • at 0x95), replacing errors
+        # FPDF standard fonts support cp1252
+        return str(text).encode('cp1252', 'replace').decode('cp1252')
 
     def header_section(self, data):
         self.set_font("Times", "B", 24)
@@ -345,10 +346,19 @@ class HarvardPDF(FPDF):
             
             self.set_font("Times", "", 10)
             for bullet in item.get("bullets", []):
+                # Small padding from start (reduced indentation)
+                self.cell(2) 
+                
+                # Draw bullet manually to control size/position
+                self.set_font("Times", "B", 14) # Larger bullet
+                self.cell(4, 5, "\x95", align="C") # 0x95 is bullet in cp1252
+                
+                # Reset font for text
+                self.set_font("Times", "", 10)
+                
+                # Sanitize text
                 safe_bullet = self.sanitize(bullet)
-                self.cell(5) 
-                self.cell(3)
-                self.multi_cell(0, 5, f"- {safe_bullet}")
+                self.multi_cell(0, 5, safe_bullet)
             self.ln(4)
 
     def add_skills(self, skills_text):

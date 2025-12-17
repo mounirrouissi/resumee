@@ -44,6 +44,10 @@ export default function LoginScreen() {
   const orb1Anim = useRef(new Animated.Value(0)).current;
   const orb2Anim = useRef(new Animated.Value(0)).current;
 
+  console.log('🤖 Google Config - Android:', !!process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID);
+  console.log('🍎 Google Config - iOS:', !!process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID);
+  console.log('🌐 Google Config - Web:', !!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
+
   const hasGoogleConfig = !!(
     process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
     process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
@@ -51,9 +55,9 @@ export default function LoginScreen() {
   );
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "dummy_id_to_prevent_crash",
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || "dummy_android_id",
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "dummy_ios_id",
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "dummy_web_id",
   });
 
   useEffect(() => {
@@ -138,7 +142,7 @@ export default function LoginScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.textSection, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          <ThemedText style={[Typography.hero, styles.title]}>Resume Improver</ThemedText>
+          <ThemedText style={[Typography.hero, styles.title]}>Resumax</ThemedText>
           <ThemedText style={[Typography.body, styles.subtitle, { color: theme.textSecondary }]}>
             Transform your resume with AI-powered enhancements and professional Harvard-style formatting
           </ThemedText>

@@ -15,6 +15,7 @@ type ResumeContextType = {
   addResume: (resume: Resume) => void;
   updateResume: (id: string, updates: Partial<Resume>) => void;
   deleteResume: (id: string) => void;
+  clearAllResumes: () => void;
   getResumeById: (id: string) => Resume | undefined;
   currentProcessingId: string | null;
   setCurrentProcessingId: (id: string | null) => void;
@@ -44,6 +45,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setResumes((prev) => prev.filter((resume) => resume.id !== id));
   };
 
+  const clearAllResumes = () => {
+    setResumes([]);
+  };
+
   const getResumeById = (id: string) => {
     return resumes.find((resume) => resume.id === id);
   };
@@ -55,6 +60,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         addResume,
         updateResume,
         deleteResume,
+        clearAllResumes,
         getResumeById,
         currentProcessingId,
         setCurrentProcessingId,

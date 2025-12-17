@@ -16,7 +16,7 @@ The app is now configured to work without Google OAuth. Users will see:
 **When Google OAuth is NOT configured:**
 ```
 ┌─────────────────────────────────┐
-│    Resume Improver              │
+│    Resumax              │
 │                                 │
 │    [Get Started]                │
 │                                 │
@@ -26,7 +26,7 @@ The app is now configured to work without Google OAuth. Users will see:
 **When Google OAuth IS configured:**
 ```
 ┌─────────────────────────────────┐
-│    Resume Improver              │
+│    Resumax              │
 │                                 │
 │    [Continue with Google]       │
 │    Continue as guest            │

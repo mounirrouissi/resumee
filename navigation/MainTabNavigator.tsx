@@ -17,16 +17,32 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+
+// ... (existing helper function to check if tab bar should be shown)
+const getTabBarVisibility = (route: any) => {
+  const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
+
+  // List of screens where we want to HIDE the tab bar
+  const hiddenScreens = ['Preview', 'ResumeDetail', 'Pricing', 'EditProfile'];
+
+  if (hiddenScreens.includes(routeName)) {
+    return 'none';
+  }
+  return 'flex';
+};
+
 export default function MainTabNavigator() {
   const { theme, isDark } = useTheme();
 
   return (
     <Tab.Navigator
       initialRouteName="HomeTab"
-      screenOptions={{
+      screenOptions={({ route }) => ({
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textMuted,
         tabBarStyle: {
+          display: getTabBarVisibility(route), // Dynamically hide
           position: "absolute",
           backgroundColor: Platform.select({
             ios: "transparent",
@@ -53,7 +69,7 @@ export default function MainTabNavigator() {
             />
           ) : null,
         headerShown: false,
-      }}
+      })}
     >
       <Tab.Screen
         name="HistoryTab"

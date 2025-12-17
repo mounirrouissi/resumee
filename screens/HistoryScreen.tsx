@@ -17,7 +17,7 @@ type NavigationProp = NativeStackNavigationProp<HistoryStackParamList, "History"
 export default function HistoryScreen() {
   const { theme, colorScheme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
-  const { resumes, deleteResume } = useResumes();
+  const { resumes, deleteResume, clearAllResumes } = useResumes();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -29,7 +29,7 @@ export default function HistoryScreen() {
     if (resumes.length === 0) return;
     Alert.alert("Clear History", "Are you sure you want to delete all resume history?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Clear All", style: "destructive", onPress: () => resumes.forEach((resume) => deleteResume(resume.id)) },
+      { text: "Clear All", style: "destructive", onPress: () => clearAllResumes() },
     ]);
   };
 
@@ -116,7 +116,7 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: Spacing.lg },
+  container: { paddingHorizontal: Spacing.lg, paddingBottom: 100 },
   headerButton: { padding: Spacing.sm },
   emptyContainer: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl, paddingTop: Spacing["4xl"] },
   emptyIcon: { width: 100, height: 100, borderRadius: 50, alignItems: "center", justifyContent: "center" },

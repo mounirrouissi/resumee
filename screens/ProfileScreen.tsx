@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { StyleSheet, View, TextInput, Pressable, Image, Switch, Animated } from "react-native";
+import { StyleSheet, View, TextInput, Pressable, Image, Switch, Animated, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,9 +16,19 @@ export default function ProfileScreen() {
   const { theme, isDark, colorScheme } = useTheme();
   const navigation = useNavigation();
   const { credits } = useCredits();
-  const { userProfile, signOut } = useUser();
+  const { userProfile, signOut, userType, displayName, avatarUri, setAvatarUri, isAuthenticated } = useUser();
+  const [localName, setLocalName] = useState(displayName || "");
+
+  const handleSelectAvatar = () => {
+    // Placeholder for avatar selection logic
+    Alert.alert("Coming Soon", "Avatar selection will be available soon!");
+  };
+
+  const handleNameBlur = () => {
+    // Placeholder for saving name
+  };
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
@@ -89,7 +99,7 @@ export default function ProfileScreen() {
         {/* Settings Section */}
         <View style={styles.section}>
           <ThemedText style={[Typography.h3, styles.sectionTitle]}>Settings</ThemedText>
-          
+
           <View style={[styles.settingCard, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
             <View style={styles.settingRow}>
               <View style={[styles.settingIcon, { backgroundColor: theme.primary + '15' }]}>
@@ -119,7 +129,7 @@ export default function ProfileScreen() {
         {/* About Section */}
         <View style={styles.section}>
           <ThemedText style={[Typography.h3, styles.sectionTitle]}>About</ThemedText>
-          
+
           {[
             { icon: "info", label: "Version", value: "1.0.0" },
             { icon: "shield", label: "Privacy Policy", chevron: true },
@@ -151,7 +161,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing["3xl"] },
+  container: { paddingHorizontal: Spacing.lg, paddingBottom: 100 },
   profileHeader: { alignItems: "center", padding: Spacing.xl, borderRadius: BorderRadius.xl, borderWidth: 1, marginBottom: Spacing.lg },
   avatarContainer: { position: "relative", marginBottom: Spacing.md },
   avatar: { width: 80, height: 80, borderRadius: 40 },

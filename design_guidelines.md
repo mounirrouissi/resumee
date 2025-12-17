@@ -1,4 +1,4 @@
-# Resume Improver - Mobile Design Guidelines
+# Resumax - Mobile Design Guidelines
 
 ## Architecture Decisions
 
@@ -45,7 +45,7 @@ Tab bar positioning:
 - **Header:** Transparent, custom navigation header
   - Left: None
   - Right: Info icon (shows tips modal)
-  - Title: "Resume Improver"
+  - Title: "Resumax"
   - Top inset: headerHeight + Spacing.xl
 
 - **Main Content:** Scrollable view

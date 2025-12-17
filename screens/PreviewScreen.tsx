@@ -148,12 +148,7 @@ export default function PreviewScreen() {
         return;
       }
 
-      // For mobile, first check if file exists
-      const checkResponse = await fetch(downloadUrl, { method: 'HEAD' });
 
-      if (!checkResponse.ok) {
-        throw new Error('PDF not ready. Please try again.');
-      }
 
       const fileUri = FileSystem.documentDirectory + 'CV.pdf';
       const downloadResumable = FileSystem.createDownloadResumable(
@@ -175,7 +170,6 @@ export default function PreviewScreen() {
 
       // Ask for review if available
       if (Platform.OS !== 'web' && await StoreReview.hasAction()) {
-        // Tiny delay to let the success animation complete first
         setTimeout(async () => {
           try {
             await StoreReview.requestReview();
@@ -186,17 +180,38 @@ export default function PreviewScreen() {
       }
 
       setTimeout(async () => {
-        if (await Sharing.isAvailableAsync()) {
+        if (Platform.OS === 'android') {
+          // Android Direct Save
+          try {
+            const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+            if (permissions.granted) {
+              const base64 = await FileSystem.readAsStringAsync(result.uri, { encoding: FileSystem.EncodingType.Base64 });
+              const newFileUri = await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, 'Resume.pdf', 'application/pdf');
+              await FileSystem.writeAsStringAsync(newFileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+              Alert.alert('Success', 'PDF Saved to selected folder');
+            } else {
+              // Determine if we should fallback to share or simply alert
+              Alert.alert('Permission Denied', 'Could not save file without permission.');
+            }
+          } catch (e) {
+            // Fallback to share if SAF fails
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(result.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: 'Save PDF' });
+            }
+          }
+        } else if (await Sharing.isAvailableAsync()) {
+          // iOS
+          Alert.alert("Save PDF", "Tap 'Save to Files' to save the PDF to your device.");
           await Sharing.shareAsync(result.uri, {
             mimeType: 'application/pdf',
             UTI: 'com.adobe.pdf',
-            dialogTitle: 'Share Your CV'
+            dialogTitle: 'Save PDF'
           });
         } else {
           Alert.alert('Success', 'CV saved to documents directory');
         }
         setDownloadSuccess(false);
-      }, 2000); // Increased delay slightly to accommodate potential review popup
+      }, 1000);
 
     } catch (error: any) {
       Alert.alert('Download Error', error.message || 'Failed to download PDF. Please try again.');

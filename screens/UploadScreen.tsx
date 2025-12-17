@@ -26,13 +26,14 @@ export default function UploadScreen() {
   const insets = useSafeAreaInsets();
   const { credits, hasCredits } = useCredits();
   const { addResume, updateResume, deleteResume, currentProcessingId, setCurrentProcessingId } = useResumes();
-  
+
   const [selectedFile, setSelectedFile] = useState<{ name: string; uri: string } | null>(null);
   const [processingStage, setProcessingStage] = useState<string>("");
   const [templates, setTemplates] = useState<CVTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("professional");
+  const [showTemplatePreview, setShowTemplatePreview] = useState(false);
   const [progress, setProgress] = useState<number>(0);
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
@@ -167,9 +168,13 @@ export default function UploadScreen() {
                 </Pressable>
               </View>
 
-              {/* Template Selection */}
               <View style={styles.templateSection}>
-                <ThemedText style={[Typography.h3, { marginBottom: Spacing.md }]}>Choose Template</ThemedText>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md }}>
+                  <ThemedText style={[Typography.h3]}>Choose Template</ThemedText>
+                  <Pressable onPress={() => setShowTemplatePreview(true)}>
+                    <ThemedText style={[Typography.bodySmall, { color: theme.primary }]}>Preview Style</ThemedText>
+                  </Pressable>
+                </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.templateScroll}>
                   {templates.map((template) => (
                     <Pressable key={template.id} style={[styles.templateCard, { backgroundColor: theme.backgroundDefault, borderColor: selectedTemplate === template.id ? theme.primary : theme.border, borderWidth: selectedTemplate === template.id ? 2 : 1 }]} onPress={() => setSelectedTemplate(template.id)}>
@@ -238,6 +243,36 @@ export default function UploadScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Template Preview Modal */}
+      <Modal visible={showTemplatePreview} animationType="slide" presentationStyle="pageSheet">
+        <View style={[styles.previewModalContainer, { backgroundColor: theme.backgroundRoot }]}>
+          <View style={[styles.previewModalHeader, { borderBottomColor: theme.border }]}>
+            <ThemedText style={Typography.h3}>Template Preview</ThemedText>
+            <Pressable onPress={() => setShowTemplatePreview(false)} style={styles.closeButton}>
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={styles.previewModalContent}>
+            <ThemedText style={[Typography.h2, { marginBottom: Spacing.md, textAlign: 'center' }]}>
+              {templates.find(t => t.id === selectedTemplate)?.name || "Template"}
+            </ThemedText>
+            <Image
+              source={{ uri: templates.find(t => t.id === selectedTemplate)?.preview_image || 'https://via.placeholder.com/300x400' }}
+              style={styles.largePreviewImage}
+              resizeMode="contain"
+            />
+            <ThemedText style={[Typography.body, { marginTop: Spacing.lg, textAlign: 'center', color: theme.textSecondary }]}>
+              {templates.find(t => t.id === selectedTemplate)?.description || "A professional, ATS-optimized template suitable for most industries."}
+            </ThemedText>
+            <Pressable style={[styles.processButton, { marginTop: Spacing.xl, width: '100%' }]} onPress={() => setShowTemplatePreview(false)}>
+              <LinearGradient colors={colorScheme === 'dark' ? Gradients.dark.primary : Gradients.light.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.processGradient}>
+                <ThemedText style={[Typography.button, { color: "#FFF" }]}>Select This Style</ThemedText>
+              </LinearGradient>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </Modal >
     </>
   );
 }
@@ -273,4 +308,9 @@ const styles = StyleSheet.create({
   progressContainer: { width: "100%", marginVertical: Spacing.lg },
   progressBar: { width: "100%", height: 6, borderRadius: 3, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 3 },
+  previewModalContainer: { flex: 1 },
+  previewModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.lg, borderBottomWidth: 1 },
+  closeButton: { padding: Spacing.sm },
+  previewModalContent: { padding: Spacing.xl, alignItems: 'center' },
+  largePreviewImage: { width: 300, height: 420, borderRadius: BorderRadius.lg, backgroundColor: '#f0f0f0', ...Shadows.medium },
 });

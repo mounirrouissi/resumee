@@ -28,13 +28,13 @@ export default function HomeStackNavigator() {
         name="Upload"
         component={UploadScreen}
         options={{
-          headerTitle: () => <HeaderTitle title="Resume Improver" />,
+          headerTitle: () => <HeaderTitle title="Resumax" />,
         }}
       />
       <Stack.Screen
         name="Preview"
         component={PreviewScreen}
-        options={{ 
+        options={{
           headerTitle: "Improved Resume",
           headerTransparent: false,
         }}
@@ -42,7 +42,7 @@ export default function HomeStackNavigator() {
       <Stack.Screen
         name="Pricing"
         component={PricingScreen}
-        options={{ 
+        options={{
           headerTitle: "Get Credits",
           presentation: "modal",
         }}

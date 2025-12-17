@@ -37,7 +37,7 @@ http://localhost:8000
 You should see:
 ```json
 {
-  "message": "Resume Improver API",
+  "message": "Resumax API",
   "status": "running"
 }
 ```

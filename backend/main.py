@@ -50,7 +50,7 @@ else:
     logger.warning("⚠️ LLM_MODEL not set, will use default")
 logger.info("=" * 80)
 
-app = FastAPI(title="Resume Improver API")
+app = FastAPI(title="Resumax API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -83,7 +83,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 @app.get("/")
 async def root():
     logger.info("Root endpoint called")
-    return {"message": "Resume Improver API", "status": "running"}
+    return {"message": "Resumax API", "status": "running"}
 
 @app.get("/api/templates")
 async def get_templates():

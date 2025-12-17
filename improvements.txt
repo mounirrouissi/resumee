@@ -1,5 +1,5 @@
 ================================================================================
-                    RESUME IMPROVER APP - IMPROVEMENTS LOG
+                    Resumax APP - IMPROVEMENTS LOG
 ================================================================================
 Date: 2025-11-25
 Session: Complete System Enhancement & OCR Implementation

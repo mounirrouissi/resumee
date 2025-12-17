@@ -585,14 +585,14 @@ index b7f0fe0..01a3cc1 100644
 +)
 +logger = logging.getLogger(__name__)
  
- app = FastAPI(title="Resume Improver API")
+ app = FastAPI(title="Resumax API")
  
 @@ -27,32 +37,54 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
  
  @app.get("/")
  async def root():
 +    logger.info("Root endpoint called")
-     return {"message": "Resume Improver API", "status": "running"}
+     return {"message": "Resumax API", "status": "running"}
  
 +@app.get("/api/templates")
 +async def get_templates():
@@ -1529,7 +1529,7 @@ index 0000000..8887056
 +++ b/improvements.txt
 @@ -0,0 +1,263 @@
 +================================================================================
-+                    RESUME IMPROVER APP - IMPROVEMENTS LOG
++                    Resumax APP - IMPROVEMENTS LOG
 +================================================================================
 +Date: 2025-11-25
 +Session: Complete System Enhancement & OCR Implementation
@@ -1885,7 +1885,7 @@ index 0000000..18914e7
 --- /dev/null
 +++ b/replit.md
 @@ -0,0 +1,68 @@
-+# Resume Improver App - Replit Migration
++# Resumax App - Replit Migration
 +
 +## Project Overview
 +An AI-powered mobile and web application that analyzes and improves resumes/CVs using Google's Gemini AI.

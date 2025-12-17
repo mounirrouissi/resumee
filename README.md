@@ -1,4 +1,4 @@
-# Resume Improver App
+# Resumax App
 
 An AI-powered mobile and web application that analyzes and improves your CV/resume using Google's Gemini AI.
 
