@@ -4,8 +4,8 @@ import Purchases, { CustomerInfo, PurchasesPackage } from 'react-native-purchase
 
 // Replace with your actual RevenueCat API Keys
 const API_KEYS = {
-    apple: "appl_placeholder_key",
-    google: "goog_placeholder_key",
+    apple: "test_ULCFoFcxUBeqxBdsMJNpLitsZRw",
+    google: "test_ULCFoFcxUBeqxBdsMJNpLitsZRw",
 };
 
 interface RevenueCatContextType {

@@ -9,6 +9,8 @@ import * as StoreReview from 'expo-store-review';
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
+import { ScrollView, Modal } from "react-native";
+import { RatingModal } from "@/components/RatingModal";
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -32,6 +34,8 @@ export default function PreviewScreen() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -169,14 +173,10 @@ export default function PreviewScreen() {
       // Haptic feedback would go here if using expo-haptics
 
       // Ask for review if available
-      if (Platform.OS !== 'web' && await StoreReview.hasAction()) {
+      if (Platform.OS !== 'web') {
         setTimeout(async () => {
-          try {
-            await StoreReview.requestReview();
-          } catch (e) {
-            console.log("Review request failed", e);
-          }
-        }, 1000);
+          setShowRatingPrompt(true);
+        }, 2000);
       }
 
       setTimeout(async () => {
@@ -189,26 +189,42 @@ export default function PreviewScreen() {
               const newFileUri = await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, 'Resume.pdf', 'application/pdf');
               await FileSystem.writeAsStringAsync(newFileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
               Alert.alert('Success', 'PDF Saved to selected folder');
+
+              // Also offer to open
+              if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(result.uri, {
+                  mimeType: 'application/pdf',
+                  UTI: 'com.adobe.pdf',
+                  dialogTitle: 'Open with...'
+                });
+              }
             } else {
-              // Determine if we should fallback to share or simply alert
-              Alert.alert('Permission Denied', 'Could not save file without permission.');
+              // Fallback to "Open With" if permission denied
+              if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(result.uri, {
+                  mimeType: 'application/pdf',
+                  UTI: 'com.adobe.pdf',
+                  dialogTitle: 'Open with...'
+                });
+              }
             }
           } catch (e) {
-            // Fallback to share if SAF fails
+            // Fallback to "Open With" if SAF fails
             if (await Sharing.isAvailableAsync()) {
-              await Sharing.shareAsync(result.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: 'Save PDF' });
+              await Sharing.shareAsync(result.uri, {
+                mimeType: 'application/pdf',
+                UTI: 'com.adobe.pdf',
+                dialogTitle: 'Open with...'
+              });
             }
           }
         } else if (await Sharing.isAvailableAsync()) {
           // iOS
-          Alert.alert("Save PDF", "Tap 'Save to Files' to save the PDF to your device.");
           await Sharing.shareAsync(result.uri, {
             mimeType: 'application/pdf',
             UTI: 'com.adobe.pdf',
-            dialogTitle: 'Save PDF'
+            dialogTitle: 'Open with...'
           });
-        } else {
-          Alert.alert('Success', 'CV saved to documents directory');
         }
         setDownloadSuccess(false);
       }, 1000);
@@ -368,6 +384,17 @@ export default function PreviewScreen() {
 
           {/* Actions */}
           <View style={styles.actionsContainer}>
+            <Pressable
+              style={[styles.actionCard, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}
+              onPress={() => setShowPreview(true)}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: theme.primary + '15' }]}>
+                <Feather name="eye" size={20} color={theme.primary} />
+              </View>
+              <ThemedText style={Typography.body}>Preview Content</ThemedText>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
+
             <Pressable style={[styles.actionCard, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]} onPress={handleShare}>
               <View style={[styles.actionIcon, { backgroundColor: theme.accent + '15' }]}>
                 <Feather name="share-2" size={20} color={theme.accent} />
@@ -437,6 +464,86 @@ export default function PreviewScreen() {
           </View>
         </View>
       </View>
+
+      {/* Rating Prompt */}
+      <RatingModal visible={showRatingPrompt} onClose={() => setShowRatingPrompt(false)} />
+
+      {/* Preview Modal */}
+      <Modal visible={showPreview} animationType="slide" presentationStyle="pageSheet">
+        <View style={[styles.previewModalContainer, { backgroundColor: theme.backgroundRoot }]}>
+          <View style={[styles.previewModalHeader, { borderBottomColor: theme.border }]}>
+            <ThemedText style={Typography.h3}>Resume Preview</ThemedText>
+            <Pressable onPress={() => setShowPreview(false)} style={styles.closeButton}>
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.previewContent}>
+            {(() => {
+              try {
+                const data = typeof resume.improvedText === 'string' ? JSON.parse(resume.improvedText) : resume.improvedText;
+                return (
+                  <View style={styles.previewPaper}>
+                    {/* Header */}
+                    <View style={styles.previewHeaderSection}>
+                      <ThemedText style={[Typography.h1, { textAlign: 'center' }]}>{data.header.name}</ThemedText>
+                      <ThemedText style={[Typography.bodySmall, { textAlign: 'center', color: theme.textSecondary }]}>
+                        {[data.header.location, data.header.phone, data.header.email, data.header.linkedin].filter(Boolean).join(' | ')}
+                      </ThemedText>
+                    </View>
+
+                    {/* Summary/Experience */}
+                    <View style={styles.previewSection}>
+                      <ThemedText style={styles.previewSectionTitle}>WORK EXPERIENCE</ThemedText>
+                      <View style={[styles.previewDivider, { backgroundColor: theme.border }]} />
+                      {data.experience.map((exp: any, idx: number) => (
+                        <View key={idx} style={styles.previewItem}>
+                          <View style={styles.previewItemHeader}>
+                            <ThemedText style={Typography.h4}>{exp.role}</ThemedText>
+                            <ThemedText style={[Typography.bodySmall, { color: theme.textSecondary }]}>{exp.date}</ThemedText>
+                          </View>
+                          <ThemedText style={[Typography.bodySmall, { fontWeight: '600' }]}>{exp.company}</ThemedText>
+                          {exp.bullets.map((bullet: string, bidx: number) => (
+                            <ThemedText key={bidx} style={styles.previewBullet}>• {bullet}</ThemedText>
+                          ))}
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Education */}
+                    <View style={styles.previewSection}>
+                      <ThemedText style={styles.previewSectionTitle}>EDUCATION</ThemedText>
+                      <View style={[styles.previewDivider, { backgroundColor: theme.border }]} />
+                      {data.education.map((edu: any, idx: number) => (
+                        <View key={idx} style={styles.previewItem}>
+                          <View style={styles.previewItemHeader}>
+                            <ThemedText style={Typography.h4}>{edu.degree}</ThemedText>
+                            <ThemedText style={[Typography.bodySmall, { color: theme.textSecondary }]}>{edu.date}</ThemedText>
+                          </View>
+                          <ThemedText style={Typography.bodySmall}>{edu.school}</ThemedText>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Skills */}
+                    <View style={styles.previewSection}>
+                      <ThemedText style={styles.previewSectionTitle}>SKILLS</ThemedText>
+                      <View style={[styles.previewDivider, { backgroundColor: theme.border }]} />
+                      <ThemedText style={Typography.bodySmall}>{data.skills}</ThemedText>
+                    </View>
+                  </View>
+                );
+              } catch (e) {
+                return (
+                  <View style={{ padding: Spacing.xl, alignItems: 'center' }}>
+                    <ThemedText style={{ color: theme.textSecondary }}>Error parsing resume content. You can still download the PDF.</ThemedText>
+                  </View>
+                );
+              }
+            })()}
+          </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -544,5 +651,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: Spacing.md,
     paddingBottom: Spacing.xs,
+  },
+  // Preview Modal Styles
+  previewModalContainer: { flex: 1 },
+  previewModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    borderBottomWidth: 1
+  },
+  closeButton: { padding: Spacing.sm },
+  previewContent: { padding: Spacing.lg },
+  previewPaper: {
+    padding: Spacing.xl,
+    backgroundColor: '#FFF', // Always white like paper
+    borderRadius: BorderRadius.sm,
+    ...Shadows.medium,
+  },
+  previewHeaderSection: { marginBottom: Spacing.xl },
+  previewSection: { marginBottom: Spacing.lg },
+  previewSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#000',
+    letterSpacing: 1.2,
+    marginBottom: 4
+  },
+  previewDivider: { height: 1, marginBottom: Spacing.md },
+  previewItem: { marginBottom: Spacing.md },
+  previewItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2
+  },
+  previewBullet: {
+    fontSize: 12,
+    color: '#333',
+    lineHeight: 18,
+    marginTop: 2,
+    paddingLeft: 4,
   },
 });

@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import HistoryStackNavigator from "@/navigation/HistoryStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
@@ -34,6 +35,7 @@ const getTabBarVisibility = (route: any) => {
 
 export default function MainTabNavigator() {
   const { theme, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -51,8 +53,16 @@ export default function MainTabNavigator() {
           }),
           borderTopWidth: 0,
           elevation: 0,
-          height: Platform.select({ ios: 88, android: 70, web: 70 }),
-          paddingBottom: Platform.select({ ios: 28, android: 12, web: 12 }),
+          height: Platform.select({
+            ios: 88,
+            android: 65 + Math.max(insets.bottom, 8),
+            web: 70
+          }),
+          paddingBottom: Platform.select({
+            ios: 28,
+            android: Math.max(insets.bottom, 12),
+            web: 12
+          }),
           paddingTop: 12,
         },
         tabBarLabelStyle: {

@@ -30,7 +30,7 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-interface PricingPlan extends CreditPack {}
+interface PricingPlan extends CreditPack { }
 
 const PRICING_PLANS: PricingPlan[] = CREDIT_PACKS;
 
@@ -187,7 +187,7 @@ export default function PricingScreen() {
       <ScreenScrollView>
         <View style={styles.content}>
           {/* Header */}
-          <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
+          {/* <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
             <View style={[styles.creditsDisplay, { backgroundColor: theme.backgroundSecondary }]}>
               <Feather name="zap" size={20} color={theme.gold} />
               <ThemedText style={[Typography.h3, { marginLeft: 8 }]}>
@@ -200,7 +200,7 @@ export default function PricingScreen() {
             <ThemedText style={[Typography.body, { color: theme.textSecondary, textAlign: "center" }]}>
               Each credit lets you transform one resume into a professional, ATS-optimized PDF
             </ThemedText>
-          </Animated.View>
+          </Animated.View> */}
 
           {/* Pricing Cards */}
           <View style={styles.pricingContainer}>

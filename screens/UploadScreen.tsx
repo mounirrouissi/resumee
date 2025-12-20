@@ -7,6 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { RatingModal } from "@/components/RatingModal";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -32,6 +33,7 @@ export default function UploadScreen() {
   const [templates, setTemplates] = useState<CVTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("professional");
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
   const [progress, setProgress] = useState<number>(0);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -222,8 +224,24 @@ export default function UploadScreen() {
               ))}
             </View>
           )}
+
+          <Pressable
+            style={({ pressed }) => [styles.rateCard, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }, pressed && { opacity: 0.9 }]}
+            onPress={() => setShowRatingModal(true)}
+          >
+            <View style={[styles.rateIconContainer, { backgroundColor: theme.gold + '15' }]}>
+              <Feather name="star" size={20} color={theme.gold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <ThemedText style={Typography.h4}>Enjoying Resumax?</ThemedText>
+              <ThemedText style={[Typography.bodySmall, { color: theme.textSecondary }]}>Rate us on the store to help us improve!</ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </Pressable>
         </Animated.View>
       </ScreenScrollView>
+
+      <RatingModal visible={showRatingModal} onClose={() => setShowRatingModal(false)} />
 
       {/* Processing Modal */}
       <Modal visible={currentProcessingId !== null} transparent animationType="fade">
@@ -313,4 +331,21 @@ const styles = StyleSheet.create({
   closeButton: { padding: Spacing.sm },
   previewModalContent: { padding: Spacing.xl, alignItems: 'center' },
   largePreviewImage: { width: 300, height: 420, borderRadius: BorderRadius.lg, backgroundColor: '#f0f0f0', ...Shadows.medium },
+  rateCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.md,
+  },
+  rateIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
 });

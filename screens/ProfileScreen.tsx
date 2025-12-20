@@ -146,6 +146,7 @@ export default function ProfileScreen() {
               </View>
             </Pressable>
           ))}
+        
         </View>
 
         {/* Sign Out */}
