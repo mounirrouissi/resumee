@@ -1,0 +1,19 @@
+# EAS ignore file
+# Exclude folders that shouldn't be uploaded to EAS Build to reduce archive size
+node_modules/
+.expo/
+.git/
+backend/
+android/
+ios/
+dist/
+web-build/
+*.pdf
+*.zip
+*.aab
+*.apk
+.venv/
+venv/
+env/
+code-backup.bundle
+

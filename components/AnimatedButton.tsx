@@ -1,12 +1,25 @@
 import React, { ReactNode } from "react";
 import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, interpolateColor, useAnimatedProps } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  interpolateColor,
+  useAnimatedProps,
+} from "react-native-reanimated";
 import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { BorderRadius, Spacing, Typography, Gradients, Shadows, Animations } from "@/constants/theme";
+import {
+  BorderRadius,
+  Spacing,
+  Typography,
+  Gradients,
+  Shadows,
+  Animations,
+} from "@/constants/theme";
 
 interface AnimatedButtonProps {
   onPress?: () => void;
@@ -53,11 +66,17 @@ export function AnimatedButton({
   const getGradientColors = () => {
     switch (variant) {
       case "success":
-        return colorScheme === "dark" ? Gradients.dark.success : Gradients.light.success;
+        return colorScheme === "dark"
+          ? Gradients.dark.success
+          : Gradients.light.success;
       case "secondary":
-        return colorScheme === "dark" ? Gradients.dark.secondary : Gradients.light.secondary;
+        return colorScheme === "dark"
+          ? Gradients.dark.secondary
+          : Gradients.light.secondary;
       default:
-        return colorScheme === "dark" ? Gradients.dark.primary : Gradients.light.primary;
+        return colorScheme === "dark"
+          ? Gradients.dark.primary
+          : Gradients.light.primary;
     }
   };
 
@@ -84,8 +103,17 @@ export function AnimatedButton({
         end={{ x: 1, y: 0 }}
         style={styles.gradient}
       >
-        {icon && <Feather name={icon} size={20} color="#FFF" style={{ marginRight: Spacing.sm }} />}
-        <ThemedText style={[Typography.button, { color: "#FFF" }]}>{title}</ThemedText>
+        {icon && (
+          <Feather
+            name={icon}
+            size={20}
+            color="#FFF"
+            style={{ marginRight: Spacing.sm }}
+          />
+        )}
+        <ThemedText style={[Typography.button, { color: "#FFF" }]}>
+          {title}
+        </ThemedText>
       </LinearGradient>
     </AnimatedPressable>
   );

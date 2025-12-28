@@ -28,7 +28,7 @@ export default function ProfileStackNavigator() {
       <Stack.Screen
         name="Pricing"
         component={PricingScreen}
-        options={{ 
+        options={{
           headerTitle: "Get Credits",
           presentation: "modal",
         }}

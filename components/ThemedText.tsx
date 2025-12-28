@@ -6,7 +6,18 @@ import { Typography } from "@/constants/theme";
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "hero" | "h1" | "h2" | "h3" | "h4" | "body" | "bodySmall" | "caption" | "small" | "button" | "link";
+  type?:
+    | "hero"
+    | "h1"
+    | "h2"
+    | "h3"
+    | "h4"
+    | "body"
+    | "bodySmall"
+    | "caption"
+    | "small"
+    | "button"
+    | "link";
 };
 
 export function ThemedText({
@@ -27,18 +38,30 @@ export function ThemedText({
 
   const getTypeStyle = () => {
     switch (type) {
-      case "hero": return Typography.hero;
-      case "h1": return Typography.h1;
-      case "h2": return Typography.h2;
-      case "h3": return Typography.h3;
-      case "h4": return Typography.h4;
-      case "body": return Typography.body;
-      case "bodySmall": return Typography.bodySmall;
-      case "caption": return Typography.caption;
-      case "small": return Typography.small;
-      case "button": return Typography.button;
-      case "link": return Typography.link;
-      default: return Typography.body;
+      case "hero":
+        return Typography.hero;
+      case "h1":
+        return Typography.h1;
+      case "h2":
+        return Typography.h2;
+      case "h3":
+        return Typography.h3;
+      case "h4":
+        return Typography.h4;
+      case "body":
+        return Typography.body;
+      case "bodySmall":
+        return Typography.bodySmall;
+      case "caption":
+        return Typography.caption;
+      case "small":
+        return Typography.small;
+      case "button":
+        return Typography.button;
+      case "link":
+        return Typography.link;
+      default:
+        return Typography.body;
     }
   };
 

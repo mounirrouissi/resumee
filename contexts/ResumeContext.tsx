@@ -25,9 +25,9 @@ const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const [currentProcessingId, setCurrentProcessingId] = useState<
-    string | null
-  >(null);
+  const [currentProcessingId, setCurrentProcessingId] = useState<string | null>(
+    null,
+  );
 
   const addResume = (resume: Resume) => {
     setResumes((prev) => [resume, ...prev]);
@@ -36,8 +36,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const updateResume = (id: string, updates: Partial<Resume>) => {
     setResumes((prev) =>
       prev.map((resume) =>
-        resume.id === id ? { ...resume, ...updates } : resume
-      )
+        resume.id === id ? { ...resume, ...updates } : resume,
+      ),
     );
   };
 

@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface CreditsContextType {
   credits: number;
@@ -12,7 +18,7 @@ interface CreditsContextType {
 
 const CreditsContext = createContext<CreditsContextType | undefined>(undefined);
 
-const CREDITS_STORAGE_KEY = '@resume_improver_credits';
+const CREDITS_STORAGE_KEY = "@resume_improver_credits";
 const FREE_CREDITS = 1; // New users get 1 free credit
 
 export function CreditsProvider({ children }: { children: ReactNode }) {
@@ -30,11 +36,14 @@ export function CreditsProvider({ children }: { children: ReactNode }) {
         setCredits(parseInt(stored, 10));
       } else {
         // First time user - give free credits
-        await AsyncStorage.setItem(CREDITS_STORAGE_KEY, FREE_CREDITS.toString());
+        await AsyncStorage.setItem(
+          CREDITS_STORAGE_KEY,
+          FREE_CREDITS.toString(),
+        );
         setCredits(FREE_CREDITS);
       }
     } catch (error) {
-      console.error('Failed to load credits:', error);
+      console.error("Failed to load credits:", error);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +53,7 @@ export function CreditsProvider({ children }: { children: ReactNode }) {
     try {
       await AsyncStorage.setItem(CREDITS_STORAGE_KEY, newCredits.toString());
     } catch (error) {
-      console.error('Failed to save credits:', error);
+      console.error("Failed to save credits:", error);
     }
   };
 
@@ -85,7 +94,7 @@ export function CreditsProvider({ children }: { children: ReactNode }) {
 export function useCredits() {
   const context = useContext(CreditsContext);
   if (context === undefined) {
-    throw new Error('useCredits must be used within a CreditsProvider');
+    throw new Error("useCredits must be used within a CreditsProvider");
   }
   return context;
 }

@@ -1,10 +1,18 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Alert, Platform, Modal, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Alert,
+  Platform,
+  Modal,
+  ScrollView,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
@@ -18,7 +26,10 @@ import { resumeApi } from "@/services/resumeApi";
 import { RatingModal } from "@/components/RatingModal";
 
 type ResumeDetailRouteProp = RouteProp<HistoryStackParamList, "ResumeDetail">;
-type NavigationProp = NativeStackNavigationProp<HistoryStackParamList, "ResumeDetail">;
+type NavigationProp = NativeStackNavigationProp<
+  HistoryStackParamList,
+  "ResumeDetail"
+>;
 
 export default function ResumeDetailScreen() {
   const { theme } = useTheme();
@@ -48,56 +59,69 @@ export default function ResumeDetailScreen() {
       setIsDownloading(true);
       const downloadUrl = resumeApi.getDownloadUrl(resume.id);
 
-      if (Platform.OS === 'web') {
-        window.open(downloadUrl, '_blank');
+      if (Platform.OS === "web") {
+        window.open(downloadUrl, "_blank");
         return;
       }
 
-      const fileUri = FileSystem.documentDirectory + 'CV.pdf';
-      const downloadResumable = FileSystem.createDownloadResumable(downloadUrl, fileUri);
+      const fileUri = FileSystem.documentDirectory + "CV.pdf";
+      const downloadResumable = FileSystem.createDownloadResumable(
+        downloadUrl,
+        fileUri,
+      );
       const result = await downloadResumable.downloadAsync();
 
-      if (!result || result.status !== 200) throw new Error('Download failed');
+      if (!result || result.status !== 200) throw new Error("Download failed");
 
       // Prompt for rating after success
       setTimeout(() => setShowRatingPrompt(true), 2000);
 
-      if (Platform.OS === 'android') {
+      if (Platform.OS === "android") {
         try {
-          const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+          const permissions =
+            await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
           if (permissions.granted) {
-            const base64 = await FileSystem.readAsStringAsync(result.uri, { encoding: FileSystem.EncodingType.Base64 });
-            const newFileUri = await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, 'Resume.pdf', 'application/pdf');
-            await FileSystem.writeAsStringAsync(newFileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
-            Alert.alert('Success', 'PDF Saved to selected folder');
+            const base64 = await FileSystem.readAsStringAsync(result.uri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            const newFileUri =
+              await FileSystem.StorageAccessFramework.createFileAsync(
+                permissions.directoryUri,
+                "Resume.pdf",
+                "application/pdf",
+              );
+            await FileSystem.writeAsStringAsync(newFileUri, base64, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            Alert.alert("Success", "PDF Saved to selected folder");
 
             // Also offer to open
             if (await Sharing.isAvailableAsync()) {
               await Sharing.shareAsync(result.uri, {
-                mimeType: 'application/pdf',
-                UTI: 'com.adobe.pdf',
-                dialogTitle: 'Open with...'
+                mimeType: "application/pdf",
+                UTI: "com.adobe.pdf",
+                dialogTitle: "Open with...",
               });
             }
           }
         } catch (e) {
           if (await Sharing.isAvailableAsync()) {
             await Sharing.shareAsync(result.uri, {
-              mimeType: 'application/pdf',
-              UTI: 'com.adobe.pdf',
-              dialogTitle: 'Open with...'
+              mimeType: "application/pdf",
+              UTI: "com.adobe.pdf",
+              dialogTitle: "Open with...",
             });
           }
         }
       } else if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(result.uri, {
-          mimeType: 'application/pdf',
-          UTI: 'com.adobe.pdf',
-          dialogTitle: 'Open with...'
+          mimeType: "application/pdf",
+          UTI: "com.adobe.pdf",
+          dialogTitle: "Open with...",
         });
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to download PDF');
+      Alert.alert("Error", error.message || "Failed to download PDF");
     } finally {
       setIsDownloading(false);
     }
@@ -106,21 +130,27 @@ export default function ResumeDetailScreen() {
   const handleShare = async () => {
     try {
       const downloadUrl = resumeApi.getDownloadUrl(resume.id);
-      if (Platform.OS === 'web') {
+      if (Platform.OS === "web") {
         if (navigator.share) {
-          await navigator.share({ title: resume.originalFilename, url: downloadUrl });
+          await navigator.share({
+            title: resume.originalFilename,
+            url: downloadUrl,
+          });
         } else {
-          Alert.alert('Link Copied', 'Download link copied to clipboard');
+          Alert.alert("Link Copied", "Download link copied to clipboard");
         }
         return;
       }
 
-      const fileUri = FileSystem.documentDirectory + 'CV.pdf';
-      const downloadResumable = FileSystem.createDownloadResumable(downloadUrl, fileUri);
+      const fileUri = FileSystem.documentDirectory + "CV.pdf";
+      const downloadResumable = FileSystem.createDownloadResumable(
+        downloadUrl,
+        fileUri,
+      );
       const result = await downloadResumable.downloadAsync();
 
-      if (await Sharing.isAvailableAsync() && result) {
-        await Sharing.shareAsync(result.uri, { mimeType: 'application/pdf' });
+      if ((await Sharing.isAvailableAsync()) && result) {
+        await Sharing.shareAsync(result.uri, { mimeType: "application/pdf" });
       }
     } catch (error) {
       Alert.alert("Error", "Failed to share resume");
@@ -143,23 +173,56 @@ export default function ResumeDetailScreen() {
         <View style={styles.container}>
           <Card style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <ThemedText style={[Typography.bodySmall, { color: theme.textSecondary }]}>Filename</ThemedText>
-              <ThemedText style={Typography.body}>{resume.originalFilename}</ThemedText>
+              <ThemedText
+                style={[Typography.bodySmall, { color: theme.textSecondary }]}
+              >
+                Filename
+              </ThemedText>
+              <ThemedText style={Typography.body}>
+                {resume.originalFilename}
+              </ThemedText>
             </View>
             <View style={styles.infoRow}>
-              <ThemedText style={[Typography.bodySmall, { color: theme.textSecondary }]}>Processed</ThemedText>
-              <ThemedText style={Typography.body}>{resume.dateProcessed.toLocaleDateString()}</ThemedText>
+              <ThemedText
+                style={[Typography.bodySmall, { color: theme.textSecondary }]}
+              >
+                Processed
+              </ThemedText>
+              <ThemedText style={Typography.body}>
+                {resume.dateProcessed.toLocaleDateString()}
+              </ThemedText>
             </View>
           </Card>
 
           <Pressable onPress={() => setShowPreview(true)}>
             <Card style={styles.contentCard}>
-              <View style={{ alignItems: 'center', padding: Spacing.md }}>
-                <View style={[styles.previewIcon, { backgroundColor: theme.primary + '15' }]}>
+              <View style={{ alignItems: "center", padding: Spacing.md }}>
+                <View
+                  style={[
+                    styles.previewIcon,
+                    { backgroundColor: theme.primary + "15" },
+                  ]}
+                >
                   <Feather name="eye" size={24} color={theme.primary} />
                 </View>
-                <ThemedText style={[Typography.h3, { marginTop: Spacing.md, textAlign: 'center' }]}>Preview Content</ThemedText>
-                <ThemedText style={[Typography.bodySmall, { marginTop: Spacing.sm, textAlign: 'center', color: theme.textSecondary }]}>
+                <ThemedText
+                  style={[
+                    Typography.h3,
+                    { marginTop: Spacing.md, textAlign: "center" },
+                  ]}
+                >
+                  Preview Content
+                </ThemedText>
+                <ThemedText
+                  style={[
+                    Typography.bodySmall,
+                    {
+                      marginTop: Spacing.sm,
+                      textAlign: "center",
+                      color: theme.textSecondary,
+                    },
+                  ]}
+                >
                   Tap to review the improved text before downloading.
                 </ThemedText>
               </View>
@@ -170,26 +233,64 @@ export default function ResumeDetailScreen() {
         </View>
       </ScreenScrollView>
 
-      <View style={[styles.downloadButtonContainer, { bottom: insets.bottom + Spacing.xl }]}>
+      <View
+        style={[
+          styles.downloadButtonContainer,
+          { bottom: insets.bottom + Spacing.xl },
+        ]}
+      >
         <Pressable
-          style={[styles.downloadButton, { backgroundColor: theme.primary }, isDownloading && { opacity: 0.7 }]}
+          style={[
+            styles.downloadButton,
+            { backgroundColor: theme.primary },
+            isDownloading && { opacity: 0.7 },
+          ]}
           onPress={handleDownload}
           disabled={isDownloading}
         >
-          <Feather name={isDownloading ? "loader" : "download"} size={20} color="#FFF" />
-          <ThemedText style={[Typography.button, { color: "#FFF", marginLeft: Spacing.sm }]}>
+          <Feather
+            name={isDownloading ? "loader" : "download"}
+            size={20}
+            color="#FFF"
+          />
+          <ThemedText
+            style={[
+              Typography.button,
+              { color: "#FFF", marginLeft: Spacing.sm },
+            ]}
+          >
             {isDownloading ? "Downloading..." : "Download PDF"}
           </ThemedText>
         </Pressable>
       </View>
 
-      <RatingModal visible={showRatingPrompt} onClose={() => setShowRatingPrompt(false)} />
+      <RatingModal
+        visible={showRatingPrompt}
+        onClose={() => setShowRatingPrompt(false)}
+      />
 
-      <Modal visible={showPreview} animationType="slide" presentationStyle="pageSheet">
-        <View style={[styles.previewModalContainer, { backgroundColor: theme.backgroundRoot }]}>
-          <View style={[styles.previewModalHeader, { borderBottomColor: theme.border }]}>
+      <Modal
+        visible={showPreview}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View
+          style={[
+            styles.previewModalContainer,
+            { backgroundColor: theme.backgroundRoot },
+          ]}
+        >
+          <View
+            style={[
+              styles.previewModalHeader,
+              { borderBottomColor: theme.border },
+            ]}
+          >
             <ThemedText style={Typography.h3}>Resume Preview</ThemedText>
-            <Pressable onPress={() => setShowPreview(false)} style={styles.closeButton}>
+            <Pressable
+              onPress={() => setShowPreview(false)}
+              style={styles.closeButton}
+            >
               <Feather name="x" size={24} color={theme.text} />
             </Pressable>
           </View>
@@ -197,58 +298,131 @@ export default function ResumeDetailScreen() {
           <ScrollView contentContainerStyle={styles.previewContent}>
             {(() => {
               try {
-                const data = typeof resume.improvedText === 'string' ? JSON.parse(resume.improvedText) : resume.improvedText;
+                const data =
+                  typeof resume.improvedText === "string"
+                    ? JSON.parse(resume.improvedText)
+                    : resume.improvedText;
                 return (
                   <View style={styles.previewPaper}>
                     <View style={styles.previewHeaderSection}>
-                      <ThemedText style={[Typography.h1, { textAlign: 'center' }]}>{data.header.name}</ThemedText>
-                      <ThemedText style={[Typography.bodySmall, { textAlign: 'center', color: theme.textSecondary }]}>
-                        {[data.header.location, data.header.phone, data.header.email, data.header.linkedin].filter(Boolean).join(' | ')}
+                      <ThemedText
+                        style={[Typography.h1, { textAlign: "center" }]}
+                      >
+                        {data.header.name}
+                      </ThemedText>
+                      <ThemedText
+                        style={[
+                          Typography.bodySmall,
+                          { textAlign: "center", color: theme.textSecondary },
+                        ]}
+                      >
+                        {[
+                          data.header.location,
+                          data.header.phone,
+                          data.header.email,
+                          data.header.linkedin,
+                        ]
+                          .filter(Boolean)
+                          .join(" | ")}
                       </ThemedText>
                     </View>
 
                     <View style={styles.previewSection}>
-                      <ThemedText style={styles.previewSectionTitle}>WORK EXPERIENCE</ThemedText>
-                      <View style={[styles.previewDivider, { backgroundColor: theme.border }]} />
+                      <ThemedText style={styles.previewSectionTitle}>
+                        WORK EXPERIENCE
+                      </ThemedText>
+                      <View
+                        style={[
+                          styles.previewDivider,
+                          { backgroundColor: theme.border },
+                        ]}
+                      />
                       {data.experience.map((exp: any, idx: number) => (
                         <View key={idx} style={styles.previewItem}>
                           <View style={styles.previewItemHeader}>
-                            <ThemedText style={Typography.h4}>{exp.role}</ThemedText>
-                            <ThemedText style={[Typography.bodySmall, { color: theme.textSecondary }]}>{exp.date}</ThemedText>
+                            <ThemedText style={Typography.h4}>
+                              {exp.role}
+                            </ThemedText>
+                            <ThemedText
+                              style={[
+                                Typography.bodySmall,
+                                { color: theme.textSecondary },
+                              ]}
+                            >
+                              {exp.date}
+                            </ThemedText>
                           </View>
-                          <ThemedText style={[Typography.bodySmall, { fontWeight: '600' }]}>{exp.company}</ThemedText>
+                          <ThemedText
+                            style={[
+                              Typography.bodySmall,
+                              { fontWeight: "600" },
+                            ]}
+                          >
+                            {exp.company}
+                          </ThemedText>
                           {exp.bullets.map((bullet: string, bidx: number) => (
-                            <ThemedText key={bidx} style={styles.previewBullet}>• {bullet}</ThemedText>
+                            <ThemedText key={bidx} style={styles.previewBullet}>
+                              • {bullet}
+                            </ThemedText>
                           ))}
                         </View>
                       ))}
                     </View>
 
                     <View style={styles.previewSection}>
-                      <ThemedText style={styles.previewSectionTitle}>EDUCATION</ThemedText>
-                      <View style={[styles.previewDivider, { backgroundColor: theme.border }]} />
+                      <ThemedText style={styles.previewSectionTitle}>
+                        EDUCATION
+                      </ThemedText>
+                      <View
+                        style={[
+                          styles.previewDivider,
+                          { backgroundColor: theme.border },
+                        ]}
+                      />
                       {data.education.map((edu: any, idx: number) => (
                         <View key={idx} style={styles.previewItem}>
                           <View style={styles.previewItemHeader}>
-                            <ThemedText style={Typography.h4}>{edu.degree}</ThemedText>
-                            <ThemedText style={[Typography.bodySmall, { color: theme.textSecondary }]}>{edu.date}</ThemedText>
+                            <ThemedText style={Typography.h4}>
+                              {edu.degree}
+                            </ThemedText>
+                            <ThemedText
+                              style={[
+                                Typography.bodySmall,
+                                { color: theme.textSecondary },
+                              ]}
+                            >
+                              {edu.date}
+                            </ThemedText>
                           </View>
-                          <ThemedText style={Typography.bodySmall}>{edu.school}</ThemedText>
+                          <ThemedText style={Typography.bodySmall}>
+                            {edu.school}
+                          </ThemedText>
                         </View>
                       ))}
                     </View>
 
                     <View style={styles.previewSection}>
-                      <ThemedText style={styles.previewSectionTitle}>SKILLS</ThemedText>
-                      <View style={[styles.previewDivider, { backgroundColor: theme.border }]} />
-                      <ThemedText style={Typography.bodySmall}>{data.skills}</ThemedText>
+                      <ThemedText style={styles.previewSectionTitle}>
+                        SKILLS
+                      </ThemedText>
+                      <View
+                        style={[
+                          styles.previewDivider,
+                          { backgroundColor: theme.border },
+                        ]}
+                      />
+                      <ThemedText style={Typography.bodySmall}>
+                        {data.skills}
+                      </ThemedText>
                     </View>
                   </View>
                 );
               } catch (e) {
                 return (
-                  <View style={{ padding: Spacing.xl, alignItems: 'center' }}>
-                    <ThemedText style={{ color: theme.textSecondary }}>Error parsing resume content.</ThemedText>
+                  <View style={{ padding: Spacing.xl, alignItems: "center" }}>
+                    <ThemedText style={{ color: theme.textSecondary }}>
+                      Error parsing resume content.
+                    </ThemedText>
                   </View>
                 );
               }
@@ -264,21 +438,71 @@ const styles = StyleSheet.create({
   container: { paddingHorizontal: Spacing.lg },
   headerButton: { padding: Spacing.sm },
   infoCard: { marginBottom: Spacing.lg },
-  infoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.sm },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
   contentCard: { marginBottom: Spacing.lg },
-  downloadButtonContainer: { position: "absolute", left: Spacing.lg, right: Spacing.lg, ...Shadows.medium },
-  downloadButton: { height: Spacing.buttonHeight, borderRadius: BorderRadius.md, flexDirection: "row", alignItems: "center", justifyContent: "center" },
-  previewIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
+  downloadButtonContainer: {
+    position: "absolute",
+    left: Spacing.lg,
+    right: Spacing.lg,
+    ...Shadows.medium,
+  },
+  downloadButton: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   previewModalContainer: { flex: 1 },
-  previewModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.lg, borderBottomWidth: 1 },
+  previewModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+  },
   closeButton: { padding: Spacing.sm },
   previewContent: { padding: Spacing.lg },
-  previewPaper: { padding: Spacing.xl, backgroundColor: '#FFF', borderRadius: BorderRadius.sm, ...Shadows.medium },
+  previewPaper: {
+    padding: Spacing.xl,
+    backgroundColor: "#FFF",
+    borderRadius: BorderRadius.sm,
+    ...Shadows.medium,
+  },
   previewHeaderSection: { marginBottom: Spacing.xl },
   previewSection: { marginBottom: Spacing.lg },
-  previewSectionTitle: { fontSize: 14, fontWeight: '700', color: '#000', letterSpacing: 1.2, marginBottom: 4 },
+  previewSectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#000",
+    letterSpacing: 1.2,
+    marginBottom: 4,
+  },
   previewDivider: { height: 1, marginBottom: Spacing.md },
   previewItem: { marginBottom: Spacing.md },
-  previewItemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  previewBullet: { fontSize: 12, color: '#333', lineHeight: 18, marginTop: 2, paddingLeft: 4 },
+  previewItemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  previewBullet: {
+    fontSize: 12,
+    color: "#333",
+    lineHeight: 18,
+    marginTop: 2,
+    paddingLeft: 4,
+  },
 });

@@ -4,6 +4,7 @@
 *.docx
 *.txt
 *.json
+*.txt
 *.env
 # dependencies
 node_modules/
@@ -77,3 +78,5 @@ ENV/
 # Backend uploads and outputs
 backend/uploads/
 backend/outputs/
+backend/.env
+backend/.env

@@ -1,11 +1,28 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Pressable,
+  ViewStyle,
+  StyleProp,
+  ActivityIndicator,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { BorderRadius, Spacing, Typography, Gradients, Shadows, Animations } from "@/constants/theme";
+import {
+  BorderRadius,
+  Spacing,
+  Typography,
+  Gradients,
+  Shadows,
+  Animations,
+} from "@/constants/theme";
 
 interface ButtonProps {
   onPress?: () => void;
@@ -47,18 +64,30 @@ export function Button({
 
   const getSizeStyle = () => {
     switch (size) {
-      case "small": return { height: 40, paddingHorizontal: Spacing.md };
-      case "large": return { height: 56, paddingHorizontal: Spacing.xl };
-      default: return { height: Spacing.buttonHeight, paddingHorizontal: Spacing.lg };
+      case "small":
+        return { height: 40, paddingHorizontal: Spacing.md };
+      case "large":
+        return { height: 56, paddingHorizontal: Spacing.xl };
+      default:
+        return { height: Spacing.buttonHeight, paddingHorizontal: Spacing.lg };
     }
   };
 
   const renderContent = () => {
     if (loading) {
-      return <ActivityIndicator color={variant === "primary" ? "#FFF" : theme.primary} />;
+      return (
+        <ActivityIndicator
+          color={variant === "primary" ? "#FFF" : theme.primary}
+        />
+      );
     }
     return (
-      <ThemedText style={[Typography.button, { color: variant === "primary" ? "#FFF" : theme.primary }]}>
+      <ThemedText
+        style={[
+          Typography.button,
+          { color: variant === "primary" ? "#FFF" : theme.primary },
+        ]}
+      >
         {children}
       </ThemedText>
     );
@@ -71,10 +100,21 @@ export function Button({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={disabled || loading}
-        style={[styles.button, getSizeStyle(), { opacity: disabled ? 0.5 : 1 }, Shadows.glow, style, animatedStyle]}
+        style={[
+          styles.button,
+          getSizeStyle(),
+          { opacity: disabled ? 0.5 : 1 },
+          Shadows.glow,
+          style,
+          animatedStyle,
+        ]}
       >
         <LinearGradient
-          colors={colorScheme === "dark" ? Gradients.dark.primary : Gradients.light.primary}
+          colors={
+            colorScheme === "dark"
+              ? Gradients.dark.primary
+              : Gradients.light.primary
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
@@ -94,8 +134,13 @@ export function Button({
       style={[
         styles.button,
         getSizeStyle(),
-        variant === "outline" && { borderWidth: 1.5, borderColor: theme.primary },
-        variant === "secondary" && { backgroundColor: theme.primaryLight + "20" },
+        variant === "outline" && {
+          borderWidth: 1.5,
+          borderColor: theme.primary,
+        },
+        variant === "secondary" && {
+          backgroundColor: theme.primaryLight + "20",
+        },
         { opacity: disabled ? 0.5 : 1 },
         style,
         animatedStyle,

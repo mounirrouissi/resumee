@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Rusmax",
-    "slug": "rusmax",
-    "version": "1.0.0",
+    "name": "Resumax",
+    "slug": "resumax",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "resumeimprover",
@@ -46,8 +46,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "6b7d777f-2058-440c-91a6-a971ba0735e9"
+        "projectId": "e076346a-324b-46de-9ff1-817664808735"
       }
-    }
+    },
+    "owner": "monirrouissi2"
   }
 }

@@ -18,19 +18,19 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 
 // ... (existing helper function to check if tab bar should be shown)
 const getTabBarVisibility = (route: any) => {
-  const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
+  const routeName = getFocusedRouteNameFromRoute(route) ?? "Home";
 
   // List of screens where we want to HIDE the tab bar
-  const hiddenScreens = ['Preview', 'ResumeDetail', 'Pricing', 'EditProfile'];
+  const hiddenScreens = ["Preview", "ResumeDetail", "Pricing", "EditProfile"];
 
   if (hiddenScreens.includes(routeName)) {
-    return 'none';
+    return "none";
   }
-  return 'flex';
+  return "flex";
 };
 
 export default function MainTabNavigator() {
@@ -56,12 +56,12 @@ export default function MainTabNavigator() {
           height: Platform.select({
             ios: 88,
             android: 65 + Math.max(insets.bottom, 8),
-            web: 70
+            web: 70,
           }),
           paddingBottom: Platform.select({
             ios: 28,
             android: Math.max(insets.bottom, 12),
-            web: 12
+            web: 12,
           }),
           paddingTop: 12,
         },
@@ -87,7 +87,12 @@ export default function MainTabNavigator() {
         options={{
           title: "History",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && { backgroundColor: theme.primary + '15' }]}>
+            <View
+              style={[
+                styles.iconContainer,
+                focused && { backgroundColor: theme.primary + "15" },
+              ]}
+            >
               <Feather name="clock" size={22} color={color} />
             </View>
           ),
@@ -99,7 +104,12 @@ export default function MainTabNavigator() {
         options={{
           title: "Upload",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && { backgroundColor: theme.primary + '15' }]}>
+            <View
+              style={[
+                styles.iconContainer,
+                focused && { backgroundColor: theme.primary + "15" },
+              ]}
+            >
               <Feather name="upload-cloud" size={22} color={color} />
             </View>
           ),
@@ -111,7 +121,12 @@ export default function MainTabNavigator() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && { backgroundColor: theme.primary + '15' }]}>
+            <View
+              style={[
+                styles.iconContainer,
+                focused && { backgroundColor: theme.primary + "15" },
+              ]}
+            >
               <Feather name="user" size={22} color={color} />
             </View>
           ),

@@ -30,7 +30,7 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-interface PricingPlan extends CreditPack { }
+interface PricingPlan extends CreditPack {}
 
 const PRICING_PLANS: PricingPlan[] = CREDIT_PACKS;
 
@@ -74,11 +74,11 @@ export default function PricingScreen() {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       await paymentsApi.openCheckout(sessionId, planId);
     } catch (error) {
-      console.error('Purchase error:', error);
+      console.error("Purchase error:", error);
       Alert.alert(
         "Purchase Credits",
         `Stripe checkout is configured in the backend. To enable payments:\n\n1. Set STRIPE_SECRET_KEY in .env\n2. Set STRIPE_WEBHOOK_SECRET\n3. Restart the backend`,
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
     } finally {
       setIsProcessing(false);
@@ -130,7 +130,11 @@ export default function PricingScreen() {
         >
           {plan.popular && (
             <LinearGradient
-              colors={colorScheme === "dark" ? Gradients.dark.primary : Gradients.light.primary}
+              colors={
+                colorScheme === "dark"
+                  ? Gradients.dark.primary
+                  : Gradients.light.primary
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.popularBadge}
@@ -146,8 +150,15 @@ export default function PricingScreen() {
               {plan.name}
             </ThemedText>
             {plan.savings && (
-              <View style={[styles.savingsBadge, { backgroundColor: theme.successLight }]}>
-                <ThemedText style={[Typography.caption, { color: theme.success }]}>
+              <View
+                style={[
+                  styles.savingsBadge,
+                  { backgroundColor: theme.successLight },
+                ]}
+              >
+                <ThemedText
+                  style={[Typography.caption, { color: theme.success }]}
+                >
                   {plan.savings}
                 </ThemedText>
               </View>
@@ -161,19 +172,39 @@ export default function PricingScreen() {
           </View>
 
           <View style={styles.creditsContainer}>
-            <View style={[styles.creditsBadge, { backgroundColor: theme.primaryLight + "30" }]}>
+            <View
+              style={[
+                styles.creditsBadge,
+                { backgroundColor: theme.primaryLight + "30" },
+              ]}
+            >
               <Feather name="zap" size={16} color={theme.primary} />
-              <ThemedText style={[Typography.body, { color: theme.primary, fontWeight: "600", marginLeft: 6 }]}>
+              <ThemedText
+                style={[
+                  Typography.body,
+                  { color: theme.primary, fontWeight: "600", marginLeft: 6 },
+                ]}
+              >
                 {plan.credits} {plan.credits === 1 ? "Credit" : "Credits"}
               </ThemedText>
             </View>
-            <ThemedText style={[Typography.caption, { color: theme.textMuted, marginTop: 4 }]}>
+            <ThemedText
+              style={[
+                Typography.caption,
+                { color: theme.textMuted, marginTop: 4 },
+              ]}
+            >
               ${plan.pricePerCredit.toFixed(2)} per credit
             </ThemedText>
           </View>
 
           {isSelected && (
-            <View style={[styles.selectedIndicator, { backgroundColor: theme.primary }]}>
+            <View
+              style={[
+                styles.selectedIndicator,
+                { backgroundColor: theme.primary },
+              ]}
+            >
               <Feather name="check" size={14} color="#FFF" />
             </View>
           )}
@@ -208,14 +239,25 @@ export default function PricingScreen() {
           </View>
 
           {/* Features */}
-          <Animated.View style={[styles.featuresSection, { opacity: fadeAnim }]}>
+          <Animated.View
+            style={[styles.featuresSection, { opacity: fadeAnim }]}
+          >
             <ThemedText style={[Typography.h3, { marginBottom: Spacing.lg }]}>
               What's included
             </ThemedText>
             {FEATURES.map((feature, index) => (
               <View key={index} style={styles.featureRow}>
-                <View style={[styles.featureIcon, { backgroundColor: theme.primaryLight + "30" }]}>
-                  <Feather name={feature.icon as any} size={16} color={theme.primary} />
+                <View
+                  style={[
+                    styles.featureIcon,
+                    { backgroundColor: theme.primaryLight + "30" },
+                  ]}
+                >
+                  <Feather
+                    name={feature.icon as any}
+                    size={16}
+                    color={theme.primary}
+                  />
                 </View>
                 <ThemedText style={[Typography.body, { flex: 1 }]}>
                   {feature.text}
@@ -228,13 +270,23 @@ export default function PricingScreen() {
           <View style={styles.trustSection}>
             <View style={styles.trustBadge}>
               <Feather name="lock" size={14} color={theme.textMuted} />
-              <ThemedText style={[Typography.caption, { color: theme.textMuted, marginLeft: 4 }]}>
+              <ThemedText
+                style={[
+                  Typography.caption,
+                  { color: theme.textMuted, marginLeft: 4 },
+                ]}
+              >
                 Secure payment
               </ThemedText>
             </View>
             <View style={styles.trustBadge}>
               <Feather name="refresh-cw" size={14} color={theme.textMuted} />
-              <ThemedText style={[Typography.caption, { color: theme.textMuted, marginLeft: 4 }]}>
+              <ThemedText
+                style={[
+                  Typography.caption,
+                  { color: theme.textMuted, marginLeft: 4 },
+                ]}
+              >
                 Money-back guarantee
               </ThemedText>
             </View>
@@ -262,13 +314,19 @@ export default function PricingScreen() {
           disabled={isProcessing}
         >
           <LinearGradient
-            colors={colorScheme === "dark" ? Gradients.dark.primary : Gradients.light.primary}
+            colors={
+              colorScheme === "dark"
+                ? Gradients.dark.primary
+                : Gradients.light.primary
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.purchaseGradient}
           >
             <ThemedText style={[Typography.button, { color: "#FFF" }]}>
-              {isProcessing ? "Processing..." : `Purchase ${PRICING_PLANS.find(p => p.id === selectedPlan)?.credits} Credits`}
+              {isProcessing
+                ? "Processing..."
+                : `Purchase ${PRICING_PLANS.find((p) => p.id === selectedPlan)?.credits} Credits`}
             </ThemedText>
           </LinearGradient>
         </Pressable>

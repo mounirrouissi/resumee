@@ -12,4 +12,3 @@ export function useTheme() {
     colorScheme: colorScheme ?? "light",
   };
 }
-

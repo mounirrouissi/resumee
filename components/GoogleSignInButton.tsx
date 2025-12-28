@@ -1,5 +1,12 @@
 import React from "react";
-import { StyleSheet, Pressable, Image, View, ActivityIndicator, Platform } from "react-native";
+import {
+  StyleSheet,
+  Pressable,
+  Image,
+  View,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography, Shadows } from "@/constants/theme";
@@ -13,10 +20,10 @@ interface GoogleSignInButtonProps {
 export default function GoogleSignInButton({
   onPress,
   isLoading = false,
-  disabled = false
+  disabled = false,
 }: GoogleSignInButtonProps) {
   const { theme, colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = colorScheme === "dark";
 
   return (
     <Pressable

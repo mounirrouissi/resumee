@@ -14,7 +14,7 @@ const Stack = createNativeStackNavigator<HistoryStackParamList>();
 
 export default function HistoryStackNavigator() {
   const { theme, isDark } = useTheme();
-  
+
   return (
     <Stack.Navigator screenOptions={getCommonScreenOptions({ theme, isDark })}>
       <Stack.Screen

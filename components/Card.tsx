@@ -11,7 +11,12 @@ interface CardProps {
   variant?: "default" | "elevated" | "outlined";
 }
 
-export function Card({ children, style, onPress, variant = "default" }: CardProps) {
+export function Card({
+  children,
+  style,
+  onPress,
+  variant = "default",
+}: CardProps) {
   const { theme } = useTheme();
 
   const getVariantStyle = () => {
