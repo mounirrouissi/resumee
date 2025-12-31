@@ -24,7 +24,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Card } from "@/components/Card";
 import { useTheme } from "@/hooks/useTheme";
-import { useCredits } from "@/contexts/CreditsContext";
+// CreditsContext removed
 import {
   Spacing,
   BorderRadius,
@@ -43,7 +43,7 @@ export default function UploadScreen() {
   const { theme, colorScheme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
-  const { credits, hasCredits } = useCredits();
+  // Credits hook removed
   const {
     addResume,
     updateResume,
@@ -110,20 +110,8 @@ export default function UploadScreen() {
 
   const processResume = async () => {
     if (!selectedFile) return;
-    if (!hasCredits) {
-      Alert.alert(
-        "No Credits",
-        "You need credits to process a resume. Get more credits to continue.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Get Credits",
-            onPress: () => navigation.navigate("Pricing" as any),
-          },
-        ],
-      );
-      return;
-    }
+    // Credit check removed
+
 
     const tempId = Date.now().toString();
     setCurrentProcessingId(tempId);
@@ -224,40 +212,7 @@ export default function UploadScreen() {
             { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
           ]}
         >
-          {/* Credits Banner */}
-          <Pressable
-            style={[
-              styles.creditsBanner,
-              { backgroundColor: theme.backgroundSecondary },
-            ]}
-            onPress={() => navigation.navigate("Pricing" as any)}
-          >
-            <View style={styles.creditsLeft}>
-              <View
-                style={[
-                  styles.creditsIcon,
-                  { backgroundColor: theme.gold + "20" },
-                ]}
-              >
-                <Feather name="zap" size={18} color={theme.gold} />
-              </View>
-              <View>
-                <ThemedText style={[Typography.h3]}>
-                  {credits} {credits === 1 ? "Credit" : "Credits"}
-                </ThemedText>
-                <ThemedText
-                  style={[Typography.caption, { color: theme.textSecondary }]}
-                >
-                  Tap to get more
-                </ThemedText>
-              </View>
-            </View>
-            <Feather
-              name="chevron-right"
-              size={20}
-              color={theme.textSecondary}
-            />
-          </Pressable>
+          {/* Credits Banner removed */}
 
           {/* Upload Zone */}
           <Pressable

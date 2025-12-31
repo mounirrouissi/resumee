@@ -29,7 +29,7 @@ export default function ProfileStackNavigator() {
         name="Pricing"
         component={PricingScreen}
         options={{
-          headerTitle: "Get Credits",
+          headerTitle: "Pro Access",
           presentation: "modal",
         }}
       />

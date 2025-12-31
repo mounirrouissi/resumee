@@ -5,20 +5,16 @@ import {
   Pressable,
   Animated,
   Dimensions,
-  Platform,
-  Linking,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { useCredits } from "@/contexts/CreditsContext";
-import { paymentsApi, CREDIT_PACKS, CreditPack } from "@/services/paymentsApi";
+import { useRevenueCat } from "@/contexts/RevenueCatContext";
 import {
   Spacing,
   BorderRadius,
@@ -30,10 +26,6 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-interface PricingPlan extends CreditPack {}
-
-const PRICING_PLANS: PricingPlan[] = CREDIT_PACKS;
-
 const FEATURES = [
   { icon: "zap", text: "AI-powered resume enhancement" },
   { icon: "file-text", text: "Harvard-style PDF formatting" },
@@ -43,10 +35,9 @@ const FEATURES = [
 
 export default function PricingScreen() {
   const { theme, colorScheme } = useTheme();
-  const { credits } = useCredits();
+  const { currentOffering, purchasePackage, isPro, isLoading, restorePurchases } = useRevenueCat();
   const insets = useSafeAreaInsets();
-  const [selectedPlan, setSelectedPlan] = useState<string>("5");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -67,183 +58,46 @@ export default function PricingScreen() {
     ]).start();
   }, []);
 
-  const handlePurchase = async (planId: string) => {
-    setIsProcessing(true);
+  const handlePurchase = async () => {
+    if (!currentOffering) return;
+    setIsPurchasing(true);
     try {
-      // Generate a unique session ID for this purchase
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await paymentsApi.openCheckout(sessionId, planId);
+      await purchasePackage(currentOffering);
     } catch (error) {
-      console.error("Purchase error:", error);
-      Alert.alert(
-        "Purchase Credits",
-        `Stripe checkout is configured in the backend. To enable payments:\n\n1. Set STRIPE_SECRET_KEY in .env\n2. Set STRIPE_WEBHOOK_SECRET\n3. Restart the backend`,
-        [{ text: "OK" }],
-      );
+      console.error(error);
     } finally {
-      setIsProcessing(false);
+      setIsPurchasing(false);
     }
   };
 
-  const renderPricingCard = (plan: PricingPlan, index: number) => {
-    const isSelected = selectedPlan === plan.id;
-    const cardScale = useRef(new Animated.Value(1)).current;
-
-    const handlePressIn = () => {
-      Animated.spring(cardScale, {
-        toValue: 0.97,
-        useNativeDriver: true,
-        ...Animations.spring,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.spring(cardScale, {
-        toValue: 1,
-        useNativeDriver: true,
-        ...Animations.spring,
-      }).start();
-    };
-
+  if (isLoading) {
     return (
-      <Animated.View
-        key={plan.id}
-        style={[
-          { transform: [{ scale: cardScale }] },
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
-      >
-        <Pressable
-          onPress={() => setSelectedPlan(plan.id)}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          style={[
-            styles.pricingCard,
-            {
-              backgroundColor: theme.backgroundDefault,
-              borderColor: isSelected ? theme.primary : theme.border,
-              borderWidth: isSelected ? 2 : 1,
-            },
-            isSelected && Shadows.glow,
-            plan.popular && styles.popularCard,
-          ]}
-        >
-          {plan.popular && (
-            <LinearGradient
-              colors={
-                colorScheme === "dark"
-                  ? Gradients.dark.primary
-                  : Gradients.light.primary
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.popularBadge}
-            >
-              <ThemedText style={[Typography.caption, { color: "#FFF" }]}>
-                MOST POPULAR
-              </ThemedText>
-            </LinearGradient>
-          )}
-
-          <View style={styles.cardHeader}>
-            <ThemedText style={[Typography.h3, { color: theme.textSecondary }]}>
-              {plan.name}
-            </ThemedText>
-            {plan.savings && (
-              <View
-                style={[
-                  styles.savingsBadge,
-                  { backgroundColor: theme.successLight },
-                ]}
-              >
-                <ThemedText
-                  style={[Typography.caption, { color: theme.success }]}
-                >
-                  {plan.savings}
-                </ThemedText>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.priceContainer}>
-            <ThemedText style={[Typography.hero, { color: theme.text }]}>
-              ${plan.price.toFixed(2)}
-            </ThemedText>
-          </View>
-
-          <View style={styles.creditsContainer}>
-            <View
-              style={[
-                styles.creditsBadge,
-                { backgroundColor: theme.primaryLight + "30" },
-              ]}
-            >
-              <Feather name="zap" size={16} color={theme.primary} />
-              <ThemedText
-                style={[
-                  Typography.body,
-                  { color: theme.primary, fontWeight: "600", marginLeft: 6 },
-                ]}
-              >
-                {plan.credits} {plan.credits === 1 ? "Credit" : "Credits"}
-              </ThemedText>
-            </View>
-            <ThemedText
-              style={[
-                Typography.caption,
-                { color: theme.textMuted, marginTop: 4 },
-              ]}
-            >
-              ${plan.pricePerCredit.toFixed(2)} per credit
-            </ThemedText>
-          </View>
-
-          {isSelected && (
-            <View
-              style={[
-                styles.selectedIndicator,
-                { backgroundColor: theme.primary },
-              ]}
-            >
-              <Feather name="check" size={14} color="#FFF" />
-            </View>
-          )}
-        </Pressable>
-      </Animated.View>
-    );
-  };
+      <View style={[styles.container, styles.center, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    )
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <ScreenScrollView>
         <View style={styles.content}>
           {/* Header */}
-          {/* <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-            <View style={[styles.creditsDisplay, { backgroundColor: theme.backgroundSecondary }]}>
-              <Feather name="zap" size={20} color={theme.gold} />
-              <ThemedText style={[Typography.h3, { marginLeft: 8 }]}>
-                {credits} {credits === 1 ? "Credit" : "Credits"}
-              </ThemedText>
-            </View>
-            <ThemedText style={[Typography.h1, styles.title]}>
-              Get More Credits
+          <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
+            <ThemedText style={[Typography.h1, styles.title, { textAlign: 'center' }]}>
+              {isPro ? "You are a Pro Member" : "Upgrade to Pro"}
             </ThemedText>
             <ThemedText style={[Typography.body, { color: theme.textSecondary, textAlign: "center" }]}>
-              Each credit lets you transform one resume into a professional, ATS-optimized PDF
+              {isPro ? "Enjoy unlimited access to all features." : "Unlock the full potential of your career with Resumax Pro."}
             </ThemedText>
-          </Animated.View> */}
-
-          {/* Pricing Cards */}
-          <View style={styles.pricingContainer}>
-            {PRICING_PLANS.map((plan, index) => renderPricingCard(plan, index))}
-          </View>
+          </Animated.View>
 
           {/* Features */}
           <Animated.View
             style={[styles.featuresSection, { opacity: fadeAnim }]}
           >
             <ThemedText style={[Typography.h3, { marginBottom: Spacing.lg }]}>
-              What's included
+              What's included in Pro
             </ThemedText>
             {FEATURES.map((feature, index) => (
               <View key={index} style={styles.featureRow}>
@@ -266,71 +120,85 @@ export default function PricingScreen() {
             ))}
           </Animated.View>
 
-          {/* Trust badges */}
-          <View style={styles.trustSection}>
-            <View style={styles.trustBadge}>
-              <Feather name="lock" size={14} color={theme.textMuted} />
-              <ThemedText
-                style={[
-                  Typography.caption,
-                  { color: theme.textMuted, marginLeft: 4 },
-                ]}
-              >
-                Secure payment
+          {/* Pricing Card */}
+          {!isPro && currentOffering && (
+            <Animated.View
+              style={[
+                styles.pricingCard,
+                {
+                  backgroundColor: theme.backgroundDefault,
+                  borderColor: theme.primary,
+                  transform: [{ translateY: slideAnim }]
+                },
+                Shadows.glow
+              ]}
+            >
+              <View style={styles.cardHeader}>
+                <ThemedText style={Typography.h2}>{currentOffering.product.title}</ThemedText>
+                <View style={[styles.badge, { backgroundColor: theme.primary }]}>
+                  <ThemedText style={[Typography.caption, { color: '#FFF' }]}>BEST VALUE</ThemedText>
+                </View>
+              </View>
+              <ThemedText style={[Typography.hero, { color: theme.primary, marginVertical: Spacing.md }]}>
+                {currentOffering.product.priceString}
               </ThemedText>
-            </View>
-            <View style={styles.trustBadge}>
-              <Feather name="refresh-cw" size={14} color={theme.textMuted} />
-              <ThemedText
-                style={[
-                  Typography.caption,
-                  { color: theme.textMuted, marginLeft: 4 },
-                ]}
-              >
-                Money-back guarantee
+              <ThemedText style={[Typography.body, { color: theme.textSecondary }]}>
+                {currentOffering.product.description}
               </ThemedText>
+            </Animated.View>
+          )}
+
+          {!isPro && !currentOffering && (
+            <View style={styles.errorContainer}>
+              <ThemedText style={{ color: theme.textSecondary }}>No packages available. Please try again later.</ThemedText>
             </View>
-          </View>
+          )}
+
         </View>
       </ScreenScrollView>
 
-      {/* Purchase Button */}
-      <View
-        style={[
-          styles.purchaseContainer,
-          {
-            backgroundColor: theme.backgroundDefault,
-            paddingBottom: insets.bottom + Spacing.lg,
-            borderTopColor: theme.border,
-          },
-        ]}
-      >
-        <Pressable
-          style={({ pressed }) => [
-            styles.purchaseButton,
-            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+      {/* Footer Actions */}
+      {!isPro && currentOffering && (
+        <View
+          style={[
+            styles.purchaseContainer,
+            {
+              backgroundColor: theme.backgroundDefault,
+              paddingBottom: insets.bottom + Spacing.lg,
+              borderTopColor: theme.border,
+            },
           ]}
-          onPress={() => handlePurchase(selectedPlan)}
-          disabled={isProcessing}
         >
-          <LinearGradient
-            colors={
-              colorScheme === "dark"
-                ? Gradients.dark.primary
-                : Gradients.light.primary
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.purchaseGradient}
+          <Pressable
+            style={({ pressed }) => [
+              styles.purchaseButton,
+              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+            ]}
+            onPress={handlePurchase}
+            disabled={isPurchasing}
           >
-            <ThemedText style={[Typography.button, { color: "#FFF" }]}>
-              {isProcessing
-                ? "Processing..."
-                : `Purchase ${PRICING_PLANS.find((p) => p.id === selectedPlan)?.credits} Credits`}
-            </ThemedText>
-          </LinearGradient>
-        </Pressable>
-      </View>
+            <LinearGradient
+              colors={
+                colorScheme === "dark"
+                  ? Gradients.dark.primary
+                  : Gradients.light.primary
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.purchaseGradient}
+            >
+              <ThemedText style={[Typography.button, { color: "#FFF" }]}>
+                {isPurchasing
+                  ? "Processing..."
+                  : `Subscribe for ${currentOffering.product.priceString}`}
+              </ThemedText>
+            </LinearGradient>
+          </Pressable>
+          <Pressable onPress={restorePurchases} style={{ marginTop: Spacing.md, alignItems: 'center' }}>
+            <ThemedText style={[Typography.caption, { color: theme.textSecondary }]}>Restore Purchases</ThemedText>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
@@ -339,80 +207,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
   content: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: 120,
   },
   header: {
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
-  },
-  creditsDisplay: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    marginBottom: Spacing.lg,
+    marginVertical: Spacing["2xl"],
   },
   title: {
-    marginBottom: Spacing.sm,
-    textAlign: "center",
-  },
-  pricingContainer: {
-    gap: Spacing.md,
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.sm
   },
   pricingCard: {
     borderRadius: BorderRadius.lg,
     padding: Spacing.xl,
-    position: "relative",
-    overflow: "hidden",
-  },
-  popularCard: {
-    marginVertical: Spacing.xs,
-  },
-  popularBadge: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderBottomLeftRadius: BorderRadius.sm,
+    borderWidth: 2,
+    marginBottom: Spacing.xl
   },
   cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
-  savingsBadge: {
+  badge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-  },
-  priceContainer: {
-    marginBottom: Spacing.md,
-  },
-  creditsContainer: {
-    alignItems: "flex-start",
-  },
-  creditsBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-  },
-  selectedIndicator: {
-    position: "absolute",
-    top: Spacing.lg,
-    left: Spacing.lg,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: BorderRadius.full
   },
   featuresSection: {
     marginBottom: Spacing["2xl"],
@@ -429,15 +253,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: Spacing.md,
-  },
-  trustSection: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.xl,
-  },
-  trustBadge: {
-    flexDirection: "row",
-    alignItems: "center",
   },
   purchaseContainer: {
     position: "absolute",
@@ -459,4 +274,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  errorContainer: {
+    padding: Spacing.xl,
+    alignItems: 'center'
+  }
 });

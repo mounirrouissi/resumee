@@ -11,13 +11,16 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
+import { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { useCredits } from "@/contexts/CreditsContext";
+// CreditsContext removed
+import { useRevenueCat } from "@/contexts/RevenueCatContext";
 import {
   Spacing,
   BorderRadius,
@@ -30,8 +33,8 @@ import { useUser } from "@/contexts/UserContext";
 
 export default function ProfileScreen() {
   const { theme, isDark, colorScheme } = useTheme();
-  const navigation = useNavigation();
-  const { credits } = useCredits();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
+  const { isPro } = useRevenueCat();
   const {
     userProfile,
     signOut,
@@ -147,9 +150,10 @@ export default function ProfileScreen() {
         </View>
 
         {/* Credits Card */}
+        {/* Pro Status Card */}
         <Pressable
           style={[styles.creditsCard, Shadows.medium]}
-          onPress={() => navigation.navigate("Pricing" as any)}
+          onPress={() => navigation.navigate("Pricing")}
         >
           <LinearGradient
             colors={
@@ -169,18 +173,20 @@ export default function ProfileScreen() {
                     { color: "rgba(255,255,255,0.8)" },
                   ]}
                 >
-                  Available Credits
+                  Membership Status
                 </ThemedText>
                 <ThemedText style={[Typography.hero, { color: "#FFF" }]}>
-                  {credits}
+                  {isPro ? "PRO Access" : "Free Plan"}
                 </ThemedText>
               </View>
-              <View style={styles.creditsAction}>
-                <ThemedText style={[Typography.button, { color: "#FFF" }]}>
-                  Get More
-                </ThemedText>
-                <Feather name="arrow-right" size={18} color="#FFF" />
-              </View>
+              {!isPro && (
+                <View style={styles.creditsAction}>
+                  <ThemedText style={[Typography.button, { color: "#FFF" }]}>
+                    Upgrade
+                  </ThemedText>
+                  <Feather name="arrow-right" size={18} color="#FFF" />
+                </View>
+              )}
             </View>
           </LinearGradient>
         </Pressable>

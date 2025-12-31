@@ -2,7 +2,7 @@
   "expo": {
     "name": "Resumax",
     "slug": "resumax",
-    "version": "1.2.0",
+    "version": "1.2.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "resumeimprover",
@@ -19,6 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "package": "com.resumeimprover.app",
+      "versionCode": 32,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },

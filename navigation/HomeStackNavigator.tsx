@@ -43,7 +43,7 @@ export default function HomeStackNavigator() {
         name="Pricing"
         component={PricingScreen}
         options={{
-          headerTitle: "Get Credits",
+          headerTitle: "Pro Access",
           presentation: "modal",
         }}
       />

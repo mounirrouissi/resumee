@@ -11,7 +11,7 @@ import LoginScreen from "@/screens/LoginScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ResumeProvider } from "@/contexts/ResumeContext";
 import { UserProvider, useUser } from "@/contexts/UserContext";
-import { CreditsProvider } from "@/contexts/CreditsContext";
+// CreditsProvider removed
 import { RevenueCatProvider } from "@/contexts/RevenueCatContext";
 
 import OnboardingScreen from "@/screens/OnboardingScreen";
@@ -41,14 +41,12 @@ export default function App() {
         <GestureHandlerRootView style={styles.root}>
           <KeyboardProvider>
             <UserProvider>
-              <CreditsProvider>
-                <RevenueCatProvider>
-                  <ResumeProvider>
-                    <AppContent />
-                    <StatusBar style="auto" />
-                  </ResumeProvider>
-                </RevenueCatProvider>
-              </CreditsProvider>
+              <RevenueCatProvider>
+                <ResumeProvider>
+                  <AppContent />
+                  <StatusBar style="auto" />
+                </ResumeProvider>
+              </RevenueCatProvider>
             </UserProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
